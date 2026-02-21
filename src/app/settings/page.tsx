@@ -12,6 +12,12 @@ interface ApiKey {
   createdAt: string;
 }
 
+interface ApiErrorPayload {
+  error?: string;
+  code?: string;
+  requestId?: string;
+}
+
 interface AuthHealthResult {
   ok: boolean;
   checks: {
@@ -21,6 +27,8 @@ interface AuthHealthResult {
   };
   status?: number;
   error?: string;
+  code?: string;
+  requestId?: string;
 }
 
 const PROVIDERS = [
@@ -101,10 +109,12 @@ export default function SettingsPage() {
 
     try {
       setAuthHealth(null);
+      const redirectUrl =
+        process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL || window.location.origin;
       const { error } = await supabase.auth.signInWithOtp({
         email: authEmail.trim(),
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: redirectUrl,
         },
       });
       if (error) throw error;
@@ -198,7 +208,13 @@ export default function SettingsPage() {
         body: JSON.stringify({ provider, key, label: `${provider} key` }),
       });
       const savedKey = await res.json();
-      if (!res.ok) throw new Error(savedKey.error || 'Failed to save API key');
+      if (!res.ok) {
+        const payload = (savedKey ?? {}) as ApiErrorPayload;
+        const safeError = payload.error || 'Failed to save API key';
+        const suffix = payload.code ? ` (code: ${payload.code})` : '';
+        const ref = payload.requestId ? ` Ref: ${payload.requestId}` : '';
+        throw new Error(`${safeError}${suffix}${ref}`);
+      }
 
       setKeys([...keys.filter(k => k.provider !== provider), savedKey]);
       
@@ -226,7 +242,13 @@ export default function SettingsPage() {
         headers: withUserHeaders(),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Delete failed');
+      if (!res.ok) {
+        const payload = (data ?? {}) as ApiErrorPayload;
+        const safeError = payload.error || 'Delete failed';
+        const suffix = payload.code ? ` (code: ${payload.code})` : '';
+        const ref = payload.requestId ? ` Ref: ${payload.requestId}` : '';
+        throw new Error(`${safeError}${suffix}${ref}`);
+      }
       setKeys(keys.filter(k => k.provider !== provider));
       setMessage({ type: 'success', text: 'API key deleted.' });
     } catch (err) {

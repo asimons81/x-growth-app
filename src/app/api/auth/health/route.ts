@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
+import { createRequestId } from '@/lib/server/errors';
 
 export async function GET() {
+  const requestId = createRequestId();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -13,6 +15,8 @@ export async function GET() {
           supabaseUrlReachable: false,
         },
         error: 'Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY',
+        code: 'AUTH_HEALTH_CONFIG',
+        requestId,
       },
       { status: 500 }
     );
@@ -44,8 +48,19 @@ export async function GET() {
         emailProviderLikelyEnabled,
       },
       status: response.status,
+      requestId,
     });
   } catch (err) {
+    const message = err instanceof Error ? err.message : 'Health check failed';
+    const lower = message.toLowerCase();
+    const code =
+      lower.includes('fetch failed') ||
+      lower.includes('network') ||
+      lower.includes('eai_again') ||
+      lower.includes('enotfound')
+        ? 'AUTH_HEALTH_NETWORK'
+        : 'AUTH_HEALTH_UNKNOWN';
+
     return NextResponse.json(
       {
         ok: false,
@@ -54,7 +69,9 @@ export async function GET() {
           supabaseUrlReachable: false,
           emailProviderLikelyEnabled: false,
         },
-        error: err instanceof Error ? err.message : 'Health check failed',
+        error: message,
+        code,
+        requestId,
       },
       { status: 502 }
     );
