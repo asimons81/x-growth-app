@@ -56,7 +56,7 @@ export default function Home() {
           </h1>
           <p className="text-lg text-[#94a3b8] max-w-2xl mb-8">
             Generate posts in your voice, build hooks that convert, track performance, and
-            schedule content — all in one place. Free forever.
+            schedule content -- all in one place. Free forever.
           </p>
 
           <div className="flex flex-wrap gap-3">

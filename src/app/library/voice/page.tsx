@@ -262,7 +262,7 @@ export default function VoiceProfilePage() {
         <div className="mb-6 flex items-center gap-3 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
           <CheckCircle size={16} className="text-emerald-400 shrink-0" />
           <p className="text-sm text-emerald-300">
-            Voice profile active — AI will now generate posts in your writing style.
+            Voice profile active -- AI will now generate posts in your writing style.
           </p>
         </div>
       )}
@@ -289,7 +289,7 @@ export default function VoiceProfilePage() {
               <div className="border-2 border-dashed border-[#2a2a45] hover:border-indigo-500/40 rounded-xl p-6 text-center cursor-pointer transition-colors hover:bg-indigo-500/5">
                 <Upload size={18} className="text-[#4b5563] mx-auto mb-2" />
                 <p className="text-sm text-[#94a3b8]">
-                  {importing ? "Processing CSV…" : "Upload your X posts CSV"}
+                  {importing ? "Processing CSV..." : "Upload your X posts CSV"}
                 </p>
                 <p className="text-xs text-[#4b5563] mt-1">
                   Needs a &quot;content&quot; or &quot;text&quot; column
@@ -302,14 +302,14 @@ export default function VoiceProfilePage() {
           {postsArray.length > 0 ? (
             <div>
               <p className="text-xs text-[#94a3b8] mb-2 font-medium">
-                Preview — top {postsArray.length} posts by engagement
+                Preview -- top {postsArray.length} posts by engagement
               </p>
               <div className="space-y-2 max-h-64 overflow-y-auto scroll-x mb-4 pr-1">
                 {postsArray.map((post, i) => (
                   <div key={i} className="p-3 rounded-xl bg-[#0f0f1a] border border-[#1e1e35]">
                     <span className="text-xs text-[#4b5563] mr-2">{i + 1}.</span>
                     <span className="text-xs text-[#94a3b8]">
-                      {post.length > 120 ? post.substring(0, 120) + "…" : post}
+                      {post.length > 120 ? post.substring(0, 120) + "..." : post}
                     </span>
                   </div>
                 ))}
@@ -336,7 +336,7 @@ export default function VoiceProfilePage() {
             className="gap-2"
           >
             <Sparkles size={15} />
-            {loading ? "Analyzing your writing…" : "Extract my voice"}
+            {loading ? "Analyzing your writing..." : "Extract my voice"}
           </Button>
         </div>
 

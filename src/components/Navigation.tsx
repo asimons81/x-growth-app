@@ -147,7 +147,7 @@ export default function Navigation() {
               }`}
             />
             <span className="text-[11px] text-[#4b5563]">
-              {loading ? "Connecting…" : isAuthenticated ? "Signed in" : "Guest mode"}
+              {loading ? "Connecting..." : isAuthenticated ? "Signed in" : "Guest mode"}
             </span>
           </div>
         </div>

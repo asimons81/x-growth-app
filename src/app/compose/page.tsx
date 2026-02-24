@@ -144,7 +144,7 @@ function ThreadTweet({
             <textarea
               value={content}
               onChange={(e) => onChange(e.target.value)}
-              placeholder={index === 0 ? "Start your thread here…" : `Tweet ${index + 1}…`}
+              placeholder={index === 0 ? "Start your thread here..." : `Tweet ${index + 1}...`}
               rows={3}
               className="w-full bg-transparent text-[#f1f5f9] text-sm resize-none focus:outline-none placeholder:text-[#4b5563]"
             />
@@ -199,7 +199,7 @@ function DraftCard({
                 {score.overall.toFixed(1)}/10
               </span>
             ) : isScoring ? (
-              <span className="text-xs text-[#4b5563] animate-pulse">Scoring…</span>
+              <span className="text-xs text-[#4b5563] animate-pulse">Scoring...</span>
             ) : null}
             <button
               onClick={handleCopy}
@@ -241,7 +241,7 @@ function DraftCard({
                     <ul className="space-y-1">
                       {score.suggestions.slice(0, 3).map((s, i) => (
                         <li key={i} className="text-xs text-[#4b5563] flex gap-1.5">
-                          <span className="text-indigo-500 shrink-0">→</span>
+                          <span className="text-indigo-500 shrink-0">-></span>
                           <span>{s}</span>
                         </li>
                       ))}
@@ -370,7 +370,7 @@ export default function ComposePage() {
           <p className="text-sm text-amber-300">
             AI generation requires a Gemini API key.{" "}
             <a href="/settings" className="underline hover:text-amber-200">
-              Add it in Settings →
+              Add it in Settings ->
             </a>
           </p>
         </div>
@@ -428,7 +428,7 @@ export default function ComposePage() {
                 Generate
               </Button>
             </div>
-            <p className="text-xs text-[#4b5563] mt-2">Press Enter to generate · Shift+Enter for new line</p>
+            <p className="text-xs text-[#4b5563] mt-2">Press Enter to generate / Shift+Enter for new line</p>
           </Card>
 
           {/* Drafts */}

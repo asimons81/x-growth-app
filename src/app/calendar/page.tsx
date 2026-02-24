@@ -327,7 +327,7 @@ export default function CalendarPage() {
                         <div key={post.id} className="p-3 rounded-xl bg-[#1c1c2e] border border-[#2a2a45]">
                           <div className="flex items-center gap-1.5 text-xs text-indigo-400 mb-1.5">
                             <Clock size={11} />
-                            {formatDate(post.scheduled_for)} · {formatTime(post.scheduled_for)}
+                            {formatDate(post.scheduled_for)} / {formatTime(post.scheduled_for)}
                           </div>
                           <p className="text-xs text-[#f1f5f9] line-clamp-2">
                             {post.posts?.content}
@@ -345,7 +345,7 @@ export default function CalendarPage() {
         <div>
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm text-[#94a3b8]">
-              Week of {weekDays[0].toLocaleDateString("en-US", { month: "short", day: "numeric" })} –{" "}
+              Week of {weekDays[0].toLocaleDateString("en-US", { month: "short", day: "numeric" })} -{" "}
               {weekDays[6].toLocaleDateString("en-US", { month: "short", day: "numeric" })}
             </p>
             <Badge variant="indigo">

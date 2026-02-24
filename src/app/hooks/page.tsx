@@ -160,7 +160,7 @@ Make hooks punchy, specific, and scroll-stopping. No generic phrases.`;
           .slice(0, 8);
         parsed = lines.map((line: string, i: number) => ({
           type: selectedTypes[i % selectedTypes.length],
-          hook: line.replace(/^[-•*\d.]+\s*/, "").trim(),
+          hook: line.replace(/^[-**\d.]+\s*/, "").trim(),
         }));
       }
 
@@ -172,7 +172,7 @@ Make hooks punchy, specific, and scroll-stopping. No generic phrases.`;
       setHooks(parsed.filter((h) => h.hook?.trim()));
       toast.success(`Generated ${parsed.length} hooks!`);
     } catch {
-      toast.error("Generation failed — check your API key");
+      toast.error("Generation failed -- check your API key");
     } finally {
       setLoading(false);
     }
@@ -268,7 +268,7 @@ Make hooks punchy, specific, and scroll-stopping. No generic phrases.`;
             {[
               { type: "Question", tip: "Ask something your reader is already wondering" },
               { type: "Statistic", tip: "Use a surprising number that reframes their worldview" },
-              { type: "Story", tip: "Start mid-action — skip the backstory" },
+              { type: "Story", tip: "Start mid-action -- skip the backstory" },
               { type: "Contrarian", tip: "Challenge conventional wisdom with specifics, not just negations" },
             ].map(({ type, tip }) => (
               <div key={type} className="flex gap-3 text-sm">

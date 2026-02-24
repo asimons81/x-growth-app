@@ -64,7 +64,7 @@ export default function IdeasPage() {
     return (
       <div className="min-h-screen p-8 bg-gray-950 text-white">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2">💡 Ideas</h1>
+          <h1 className="text-3xl font-bold mb-2"> Ideas</h1>
           <p className="text-gray-400">Loading...</p>
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function IdeasPage() {
   return (
     <div className="min-h-screen p-8 bg-gray-950 text-white">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">💡 Ideas</h1>
+        <h1 className="text-3xl font-bold mb-2"> Ideas</h1>
         <p className="text-gray-400 mb-8">Brain dump your content ideas</p>
         
         {/* Add New Idea */}
@@ -159,7 +159,7 @@ export default function IdeasPage() {
                   onClick={() => deleteIdea(idea.id)}
                   className="text-gray-500 hover:text-red-400 ml-4"
                 >
-                  ✕
+                  x
                 </button>
               </div>
             ))}

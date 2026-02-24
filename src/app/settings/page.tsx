@@ -120,7 +120,7 @@ function ApiKeyCard({
         <div className="flex items-center justify-between p-3 bg-[#1c1c2e] rounded-xl border border-[#2a2a45]">
           <div className="flex items-center gap-2">
             <CheckCircle size={14} className="text-emerald-400" />
-            <span className="text-sm text-[#94a3b8] font-mono">••••••••••••••••</span>
+            <span className="text-sm text-[#94a3b8] font-mono">****************</span>
           </div>
           <Button
             variant="danger"
@@ -388,7 +388,7 @@ export default function SettingsPage() {
           ) : (
             <div>
               <p className="text-sm text-[#94a3b8] mb-4">
-                Sign in with your email — we&apos;ll send a magic link. No password needed.
+                Sign in with your email -- we&apos;ll send a magic link. No password needed.
               </p>
               <div className="flex gap-2 mb-4">
                 <input
@@ -506,7 +506,7 @@ export default function SettingsPage() {
                 {!isAuthenticated
                   ? "Sign in to import data"
                   : importing
-                  ? "Importing…"
+                  ? "Importing..."
                   : "Click to upload posts CSV"}
               </p>
               <p className="text-xs text-[#4b5563] mt-1">Supports X Analytics CSV format</p>

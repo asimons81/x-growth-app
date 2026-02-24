@@ -104,7 +104,7 @@ function StreakCard({ loading }: { loading: boolean }) {
 
       <p className="text-xs text-[#4b5563]">
         {weekCount >= weekGoal
-          ? "Week goal reached! 🎉"
+          ? "Week goal reached! !"
           : `${weekGoal - weekCount} more post${weekGoal - weekCount !== 1 ? "s" : ""} to hit your goal`}
       </p>
     </Card>
@@ -171,7 +171,7 @@ function VoiceProfileCard({ ready, loading }: { ready: boolean; loading: boolean
       </p>
       <Link href="/library/voice">
         <Button variant={ready ? "ghost" : "outline"} size="sm" fullWidth>
-          {ready ? "Update profile" : "Set up now →"}
+          {ready ? "Update profile" : "Set up now ->"}
         </Button>
       </Link>
     </Card>

@@ -193,7 +193,7 @@ Keep the author's voice. Make each format feel native to its context.`;
       setVariants(valid.length > 0 ? valid : parsed);
       toast.success(`Created ${valid.length || parsed.length} variants!`);
     } catch {
-      toast.error("Repurposing failed — check your API key");
+      toast.error("Repurposing failed -- check your API key");
     } finally {
       setLoading(false);
     }

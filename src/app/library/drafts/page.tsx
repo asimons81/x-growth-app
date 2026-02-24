@@ -202,7 +202,7 @@ export default function DraftsPage() {
         <div className="mb-6 flex items-start gap-3 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
           <span className="text-amber-400 text-sm">
             Sign in to score drafts with AI.{" "}
-            <a href="/settings" className="underline hover:text-amber-200">Settings →</a>
+            <a href="/settings" className="underline hover:text-amber-200">Settings -></a>
           </span>
         </div>
       )}

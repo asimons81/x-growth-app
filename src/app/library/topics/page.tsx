@@ -95,7 +95,7 @@ export default function TopicsPage() {
             value={newTopic}
             onChange={(e) => setNewTopic(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addTopic()}
-            placeholder="e.g. AI, Building in Public, Productivity…"
+            placeholder="e.g. AI, Building in Public, Productivity..."
             className="input-base flex-1"
           />
           <Button onClick={addTopic} loading={adding} disabled={!newTopic.trim()} className="gap-2 shrink-0">

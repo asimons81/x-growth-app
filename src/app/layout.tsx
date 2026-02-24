@@ -5,7 +5,7 @@ import AuthSync from "@/components/AuthSync";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
-  title: "GrowthOS — X Content Operating System",
+  title: "GrowthOS -- X Content Operating System",
   description: "AI-powered X growth platform. Compose, schedule, and analyze your content.",
 };
 
@@ -23,7 +23,7 @@ export default function RootLayout({
         <AuthSync />
         <Navigation />
 
-        {/* Main content area — offset by sidebar on desktop, padded for bottom nav on mobile */}
+        {/* Main content area -- offset by sidebar on desktop, padded for bottom nav on mobile */}
         <main className="min-h-screen lg:ml-[240px] pb-24 lg:pb-8">
           {children}
         </main>

@@ -242,7 +242,7 @@ export default function IdeasPage() {
       const expanded = data.drafts?.[0]?.content || "Could not expand idea.";
       setExpandedModal({ idea, text: expanded });
     } catch {
-      toast.error("Could not expand idea — check your API key");
+      toast.error("Could not expand idea -- check your API key");
     } finally {
       setExpandingId(null);
     }
@@ -303,7 +303,7 @@ export default function IdeasPage() {
         </div>
 
         <div className="flex items-center justify-between">
-          <p className="text-xs text-[#4b5563]">⌘+Enter to save</p>
+          <p className="text-xs text-[#4b5563]">Cmd+Enter to save</p>
           <Button
             onClick={addIdea}
             loading={adding}
@@ -323,7 +323,7 @@ export default function IdeasPage() {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4b5563]" />
           <input
             type="text"
-            placeholder="Search ideas…"
+            placeholder="Search ideas..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="input-base pl-8 py-2"
