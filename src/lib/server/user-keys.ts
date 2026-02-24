@@ -101,7 +101,11 @@ export async function getUserApiKey(userId: string, provider: string): Promise<s
     .limit(1)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    // Gracefully degrade when optional table isn't created yet
+    if ((error as { code?: string }).code === 'PGRST205') return null;
+    throw error;
+  }
   if (!data?.encrypted_key) return null;
 
   return decryptSecret(data.encrypted_key);
