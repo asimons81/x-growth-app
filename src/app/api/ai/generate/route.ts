@@ -23,7 +23,8 @@ export async function POST(request: Request) {
     }
 
     const storedApiKey = await getUserApiKey(userId, 'google');
-    const apiKey = storedApiKey || requestApiKey;
+    const envApiKey = process.env.GEMINI_API_KEY;
+    const apiKey = storedApiKey || requestApiKey || envApiKey;
 
     if (!apiKey) {
       return NextResponse.json(
