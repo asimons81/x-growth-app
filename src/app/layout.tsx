@@ -1,22 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
 import AuthSync from "@/components/AuthSync";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
-  title: "X Growth App",
-  description: "AI-powered X content operating system",
+  title: "GrowthOS — X Content Operating System",
+  description: "AI-powered X growth platform. Compose, schedule, and analyze your content.",
 };
 
 export default function RootLayout({
@@ -25,15 +15,39 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-950 text-white`}
+        className="antialiased"
+        style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}
       >
         <AuthSync />
-        <div className="pb-20">
-          {children}
-        </div>
         <Navigation />
+
+        {/* Main content area — offset by sidebar on desktop, padded for bottom nav on mobile */}
+        <main className="min-h-screen lg:ml-[240px] pb-24 lg:pb-8">
+          {children}
+        </main>
+
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3500,
+            style: {
+              background: "#161625",
+              color: "#f1f5f9",
+              border: "1px solid #2a2a45",
+              borderRadius: "12px",
+              fontSize: "13px",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+            },
+            success: {
+              iconTheme: { primary: "#10b981", secondary: "#161625" },
+            },
+            error: {
+              iconTheme: { primary: "#ef4444", secondary: "#161625" },
+            },
+          }}
+        />
       </body>
     </html>
   );

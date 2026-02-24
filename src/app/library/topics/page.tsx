@@ -1,141 +1,168 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { dataApi } from '@/lib/data';
+import { useState, useEffect } from "react";
+import { dataApi } from "@/lib/data";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import toast from "react-hot-toast";
+import { Tag, Plus, X, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 interface Topic {
   id: string;
   topic: string;
+  color?: string;
   created_at: string;
 }
 
-const TOPIC_COLORS = [
-  '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
-  '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
+const PALETTE = [
+  "#6366f1", "#8b5cf6", "#ec4899", "#ef4444",
+  "#f59e0b", "#10b981", "#06b6d4", "#84cc16",
+  "#f97316", "#a78bfa",
 ];
 
 export default function TopicsPage() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newTopic, setNewTopic] = useState('');
-  const [selectedColor, setSelectedColor] = useState(TOPIC_COLORS[0]);
-  
+  const [newTopic, setNewTopic] = useState("");
+  const [selectedColor, setSelectedColor] = useState(PALETTE[0]);
+  const [adding, setAdding] = useState(false);
+
   useEffect(() => {
     loadTopics();
   }, []);
-  
+
   const loadTopics = async () => {
     setLoading(true);
     try {
       const data = await dataApi.getTopics();
       setTopics(data);
-    } catch (err) {
-      console.error('Failed to load topics:', err);
+    } catch {
+      toast.error("Failed to load topics");
     } finally {
       setLoading(false);
     }
   };
-  
+
   const addTopic = async () => {
     if (!newTopic.trim()) return;
-    
+    setAdding(true);
     try {
       const saved = await dataApi.createTopic(newTopic.trim(), selectedColor);
       setTopics([...topics, saved]);
-      setNewTopic('');
-    } catch (err) {
-      console.error('Failed to save topic:', err);
+      setNewTopic("");
+      toast.success("Topic added!");
+    } catch {
+      toast.error("Failed to add topic");
+    } finally {
+      setAdding(false);
     }
   };
-  
+
   const deleteTopic = async (id: string) => {
     try {
       await dataApi.deleteTopic(id);
-      setTopics(topics.filter(t => t.id !== id));
-    } catch (err) {
-      console.error('Failed to delete topic:', err);
+      setTopics(topics.filter((t) => t.id !== id));
+      toast.success("Topic removed");
+    } catch {
+      toast.error("Failed to delete topic");
     }
   };
-  
-  const getColorForTopic = (name: string) => {
-    const index = topics.findIndex(t => t.topic === name);
-    return TOPIC_COLORS[index % TOPIC_COLORS.length];
-  };
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen p-8 bg-gray-950 text-white">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2">🏷️ Topics</h1>
-          <p className="text-gray-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-  
+
   return (
-    <div className="min-h-screen p-8 bg-gray-950 text-white">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">🏷️ Topics</h1>
-        <p className="text-gray-400 mb-8">Topics you post about</p>
-        
-        {/* Add New Topic */}
-        <div className="mb-8 p-6 bg-gray-900 rounded-lg border border-gray-800">
+    <div className="p-6 lg:p-10 max-w-4xl mx-auto">
+      <div className="mb-2">
+        <Link href="/library" className="flex items-center gap-1.5 text-xs text-[#4b5563] hover:text-[#94a3b8] transition-colors">
+          <ArrowLeft size={12} />
+          Library
+        </Link>
+      </div>
+
+      <PageHeader
+        title="Topics"
+        description="The content categories you post about"
+        icon={<Tag size={18} />}
+      />
+
+      {/* Add topic */}
+      <Card className="p-5 mb-6">
+        <label className="block text-sm font-medium text-[#94a3b8] mb-3">Add a topic</label>
+        <div className="flex gap-3 mb-4">
           <input
+            type="text"
             value={newTopic}
             onChange={(e) => setNewTopic(e.target.value)}
-            placeholder="Topic name..."
-            className="w-full px-4 py-3 bg-gray-950 border border-gray-800 rounded-lg mb-4"
+            onKeyDown={(e) => e.key === "Enter" && addTopic()}
+            placeholder="e.g. AI, Building in Public, Productivity…"
+            className="input-base flex-1"
           />
-          
-          <div className="flex flex-wrap gap-2 mb-4">
-            {TOPIC_COLORS.map(color => (
+          <Button onClick={addTopic} loading={adding} disabled={!newTopic.trim()} className="gap-2 shrink-0">
+            <Plus size={13} />
+            Add
+          </Button>
+        </div>
+
+        {/* Color picker */}
+        <div>
+          <p className="text-xs text-[#4b5563] mb-2">Tag color</p>
+          <div className="flex gap-2 flex-wrap">
+            {PALETTE.map((color) => (
               <button
                 key={color}
                 onClick={() => setSelectedColor(color)}
-                className={`w-8 h-8 rounded-full ${selectedColor === color ? 'ring-2 ring-white' : ''}`}
+                className={`w-7 h-7 rounded-full transition-transform ${selectedColor === color ? "scale-125 ring-2 ring-white ring-offset-1 ring-offset-[#0f0f1a]" : "hover:scale-110"}`}
                 style={{ backgroundColor: color }}
               />
             ))}
           </div>
-          
-          <button
-            onClick={addTopic}
-            disabled={!newTopic.trim()}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg font-medium"
-          >
-            Add Topic
-          </button>
         </div>
-        
-        {/* Topics Grid */}
-        {topics.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            No topics yet. Add your first topic above!
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-3">
-            {topics.map(topic => {
-              const color = getColorForTopic(topic.topic);
-              return (
-                <div
-                  key={topic.id}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full"
-                  style={{ backgroundColor: color + '20', border: `1px solid ${color}` }}
+      </Card>
+
+      {/* Topics grid */}
+      {loading ? (
+        <div className="flex flex-wrap gap-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="skeleton h-9 w-24 rounded-full" />
+          ))}
+        </div>
+      ) : topics.length === 0 ? (
+        <EmptyState
+          icon={<Tag size={24} />}
+          title="No topics yet"
+          description="Add your content categories to organize ideas and tag posts"
+        />
+      ) : (
+        <div className="flex flex-wrap gap-2.5">
+          {topics.map((topic) => {
+            const color = topic.color || PALETTE[0];
+            return (
+              <div
+                key={topic.id}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-medium group"
+                style={{
+                  backgroundColor: `${color}18`,
+                  border: `1px solid ${color}40`,
+                  color,
+                }}
+              >
+                <span
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ backgroundColor: color }}
+                />
+                {topic.topic}
+                <button
+                  onClick={() => deleteTopic(topic.id)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-white ml-0.5"
                 >
-                  <span style={{ color }}>{topic.topic}</span>
-                  <button
-                    onClick={() => deleteTopic(topic.id)}
-                    className="text-gray-400 hover:text-red-400 text-sm"
-                  >
-                    ✕
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                  <X size={12} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
