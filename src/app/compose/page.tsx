@@ -241,7 +241,7 @@ function DraftCard({
                     <ul className="space-y-1">
                       {score.suggestions.slice(0, 3).map((s, i) => (
                         <li key={i} className="text-xs text-[#4b5563] flex gap-1.5">
-                          <span className="text-indigo-500 shrink-0">-></span>
+                          <span className="text-indigo-500 shrink-0">-&gt;</span>
                           <span>{s}</span>
                         </li>
                       ))}
@@ -370,7 +370,7 @@ export default function ComposePage() {
           <p className="text-sm text-amber-300">
             AI generation requires a Gemini API key.{" "}
             <a href="/settings" className="underline hover:text-amber-200">
-              Add it in Settings ->
+              Add it in Settings &rarr;
             </a>
           </p>
         </div>
