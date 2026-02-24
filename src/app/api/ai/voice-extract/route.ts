@@ -17,7 +17,10 @@ export async function POST(request: Request) {
     }
     
     const storedApiKey = await getUserApiKey(userId, 'google');
-    const envApiKey = process.env.GEMINI_API_KEY;
+    const envApiKey =
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     const apiKey = storedApiKey || requestApiKey || envApiKey;
 
     if (!apiKey) {
@@ -49,8 +52,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ profile });
   } catch (err) {
     console.error('Voice extraction error:', err);
+    const errorMessage =
+      err instanceof Error
+        ? err.message
+        : typeof err === 'string'
+        ? err
+        : JSON.stringify(err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Extraction failed' },
+      { error: errorMessage || 'Extraction failed' },
       { status: 500 }
     );
   }
