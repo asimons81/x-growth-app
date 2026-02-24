@@ -28,6 +28,7 @@ interface Idea {
 }
 
 const TOPICS = ["AI", "Tech", "Coding", "Growth", "Photography", "UFC", "Personal", "News", "Other"];
+const NOW_MS = Date.now();
 
 const TOPIC_COLORS: Record<string, string> = {
   AI: "indigo",
@@ -46,15 +47,17 @@ function IdeaCard({
   onDelete,
   onExpand,
   expandingId,
+  nowMs,
 }: {
   idea: Idea;
   onDelete: (id: string) => void;
   onExpand: (idea: Idea) => void;
   expandingId: string | null;
+  nowMs: number;
 }) {
   const isExpanding = expandingId === idea.id;
   const timeAgo = (() => {
-    const diff = Date.now() - new Date(idea.created_at).getTime();
+    const diff = nowMs - new Date(idea.created_at).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 60) return `${mins}m ago`;
     const hrs = Math.floor(mins / 60);
@@ -394,6 +397,7 @@ export default function IdeasPage() {
               onDelete={deleteIdea}
               onExpand={expandIdea}
               expandingId={expandingId}
+              nowMs={NOW_MS}
             />
           ))}
         </div>

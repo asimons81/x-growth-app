@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { dataApi } from "@/lib/data";
-import { Card, CardContent } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -61,19 +61,22 @@ function StatCard({ label, value, icon: Icon, color, bgColor, href, loading }: S
   );
 }
 
-function StreakCard({ loading }: { loading: boolean }) {
-  const [streak, setStreak] = useState(0);
-  const [weekGoal] = useState(5);
-  const [weekCount, setWeekCount] = useState(0);
-
-  useEffect(() => {
+function StreakCard() {
+  const [streak] = useState(() => {
     try {
-      const s = parseInt(localStorage.getItem("writing_streak") || "0");
-      const wc = parseInt(localStorage.getItem("week_count") || "0");
-      setStreak(s);
-      setWeekCount(wc);
-    } catch {}
-  }, []);
+      return parseInt(localStorage.getItem("writing_streak") || "0");
+    } catch {
+      return 0;
+    }
+  });
+  const [weekGoal] = useState(5);
+  const [weekCount] = useState(() => {
+    try {
+      return parseInt(localStorage.getItem("week_count") || "0");
+    } catch {
+      return 0;
+    }
+  });
 
   const pct = Math.min(100, Math.round((weekCount / weekGoal) * 100));
 
@@ -308,7 +311,7 @@ export default function DashboardPage() {
       {/* Secondary grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <QuickActionsCard />
-        <StreakCard loading={loading} />
+        <StreakCard />
         <VoiceProfileCard ready={stats.voiceProfileReady} loading={loading} />
       </div>
 
