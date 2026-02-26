@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import {
   LayoutDashboard,
@@ -17,6 +18,8 @@ import {
   TrendingUp,
   ChevronRight,
   Circle,
+  Moon,
+  Sun,
 } from "lucide-react";
 
 const navItems = [
@@ -73,25 +76,48 @@ function SidebarItem({
 export default function Navigation() {
   const pathname = usePathname();
   const { isAuthenticated, loading } = useAuthUser();
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof document === "undefined") return true;
+    return document.body.classList.contains("dark") || document.documentElement.classList.contains("dark");
+  });
+
+  useEffect(() => {
+    document.body.classList.toggle("dark", isDark);
+  }, [isDark]);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
+
+  const toggleDarkMode = () => {
+    const next = !isDark;
+    document.body.classList.toggle("dark", next);
+    setIsDark(next);
+  };
 
   return (
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-[240px] flex-col z-50 border-r border-[#1e1e35] bg-[#070711]">
         {/* Logo */}
-        <div className="px-5 py-6 border-b border-[#1e1e35]">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+        <div className="px-5 py-6 border-b border-[#1e1e35] flex items-center justify-between gap-3">
+          <Link href="/" className="flex items-center gap-2.5 group min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
               <TrendingUp size={16} className="text-white" />
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="font-bold text-[#f1f5f9] text-sm">GrowthOS</span>
               <span className="block text-[10px] text-[#4b5563] leading-none">for X</span>
             </div>
           </Link>
+          <button
+            type="button"
+            onClick={toggleDarkMode}
+            className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg border border-[#2a2a45] bg-[#161625] text-[#94a3b8] hover:text-[#f1f5f9] hover:border-[#3a3a5a] transition-colors"
+            aria-label="Toggle dark mode"
+            title="Toggle dark mode"
+          >
+            {isDark ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
         </div>
 
         {/* Nav sections */}

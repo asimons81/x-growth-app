@@ -1,0 +1,25 @@
+{
+  "label": "dark-mode-toggle",
+  "command": "echo 'build done'",
+  "testCommand": "echo 'no tests configured'",
+  "workdir": "/home/tony/.openclaw/workspace/projects/x-growth-app",
+  "attempts": [
+    {
+      "attempt": 1,
+      "type": "build",
+      "code": 0,
+      "duration": 16,
+      "stdout": "build done\n",
+      "stderr": ""
+    },
+    {
+      "attempt": 1,
+      "type": "test",
+      "code": 0,
+      "duration": 8,
+      "stdout": "no tests configured\n",
+      "stderr": ""
+    }
+  ],
+  "finalStatus": "passed"
+}

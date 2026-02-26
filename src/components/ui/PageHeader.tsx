@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { DarkModeToggle } from "@/components/ui/DarkModeToggle";
 
 interface PageHeaderProps {
   title: string;
@@ -21,7 +22,10 @@ export function PageHeader({ title, description, icon, action }: PageHeaderProps
           {description && <p className="text-sm text-[#94a3b8] mt-0.5">{description}</p>}
         </div>
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      <div className="shrink-0 flex items-center gap-2">
+        {action}
+        <DarkModeToggle />
+      </div>
     </div>
   );
 }
