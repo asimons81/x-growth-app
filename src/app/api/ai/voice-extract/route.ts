@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 export async function POST(request: Request) {
   try {
     const { posts, apiKey: requestApiKey } = await request.json();
-    const userId = getRequestUserId(request);
+    const userId = await getRequestUserId(request);
     
     if (!posts || !Array.isArray(posts) || posts.length < 5) {
       return NextResponse.json(
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       process.env.GEMINI_API_KEY ||
       process.env.GOOGLE_API_KEY ||
       process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-    const apiKey = storedApiKey || requestApiKey || envApiKey;
+    const apiKey = (storedApiKey as string | null) || requestApiKey || envApiKey;
 
     if (!apiKey) {
       return NextResponse.json(

@@ -12,7 +12,7 @@ import {
 export async function GET(request: Request) {
   const requestId = createRequestId();
   try {
-    const userId = getRequestUserId(request);
+    const userId = await getRequestUserId(request);
     const keys = await listUserApiKeys(userId);
     return NextResponse.json(keys);
   } catch (err) {
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const requestId = createRequestId();
   try {
-    const userId = getRequestUserId(request);
+    const userId = await getRequestUserId(request);
     const { provider, key, label } = await request.json();
 
     if (!provider || !key) {
@@ -67,7 +67,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const userId = getRequestUserId(request);
+    const userId = await getRequestUserId(request);
     await deleteUserApiKey(userId, id);
     return NextResponse.json({ success: true });
   } catch (err) {

@@ -13,7 +13,7 @@ interface ImportReport {
 
 export async function POST(request: Request) {
   try {
-    const userId = getRequestUserId(request);
+    const userId = await getRequestUserId(request);
     await ensureUserExists(userId);
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -78,6 +78,7 @@ export async function POST(request: Request) {
         const replies = parseInt(String(row.replies || '0'), 10) || 0;
         const retweets = parseInt(String(row.retweets || row.reposts || '0'), 10) || 0;
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { error } = await supabase.from('posts').insert({
           user_id: userId,
           content,
@@ -121,6 +122,7 @@ export async function POST(request: Request) {
         const engagements = parseInt(String(row.engagements || '0'), 10) || 0;
         const postsCount = parseInt(String(row.posts_count || row.posts || '0'), 10) || 0;
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { error } = await supabase.from('daily_metrics').insert({
           user_id: userId,
           date: date.toISOString(),

@@ -16,7 +16,7 @@ const FALLBACK_VOICE_PROFILE: VoiceProfileInput = {
 export async function POST(request: Request) {
   try {
     const { topic, count = 3, username = 'User', apiKey: requestApiKey, voiceProfile } = await request.json();
-    const userId = getRequestUserId(request);
+    const userId = await getRequestUserId(request);
     
     if (!topic) {
       return NextResponse.json({ error: 'Topic required' }, { status: 400 });
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       process.env.GEMINI_API_KEY ||
       process.env.GOOGLE_API_KEY ||
       process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-    const apiKey = storedApiKey || requestApiKey || envApiKey;
+    const apiKey = (storedApiKey as string | null) || requestApiKey || envApiKey;
 
     if (!apiKey) {
       return NextResponse.json(

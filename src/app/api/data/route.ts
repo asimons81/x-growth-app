@@ -5,13 +5,13 @@ import { ensureUserExists, getRequestUserId } from '@/lib/server-user';
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const type = searchParams.get('type'); // ideas, hooks, topics, drafts, schedule
-  const userId = getRequestUserId(request);
+  const userId = await getRequestUserId(request);
   
   try {
     let data;
     
     switch (type) {
-      case 'ideas':
+      case 'ideas': {
         const { data: ideas } = await supabase
           .from('ideas')
           .select('*')
@@ -19,8 +19,9 @@ export async function GET(request: NextRequest) {
           .order('created_at', { ascending: false });
         data = ideas;
         break;
+      }
         
-      case 'hooks':
+      case 'hooks': {
         const { data: hooks } = await supabase
           .from('hooks')
           .select('*')
@@ -28,8 +29,9 @@ export async function GET(request: NextRequest) {
           .order('created_at', { ascending: false });
         data = hooks;
         break;
+      }
         
-      case 'topics':
+      case 'topics': {
         const { data: topics } = await supabase
           .from('topics')
           .select('*')
@@ -37,8 +39,9 @@ export async function GET(request: NextRequest) {
           .order('created_at', { ascending: false });
         data = topics;
         break;
+      }
         
-      case 'drafts':
+      case 'drafts': {
         const { data: posts } = await supabase
           .from('posts')
           .select('*')
@@ -47,8 +50,9 @@ export async function GET(request: NextRequest) {
           .order('created_at', { ascending: false });
         data = posts;
         break;
+      }
         
-      case 'schedule':
+      case 'schedule': {
         const { data: schedule } = await supabase
           .from('schedule_queue')
           .select('*, posts(*)')
@@ -57,6 +61,7 @@ export async function GET(request: NextRequest) {
           .order('scheduled_for', { ascending: true });
         data = schedule;
         break;
+      }
         
       default:
         return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
@@ -71,7 +76,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = getRequestUserId(request);
+    const userId = await getRequestUserId(request);
     await ensureUserExists(userId);
     const body = await request.json();
     const { type, action, data: itemData } = body;
