@@ -78,10 +78,11 @@ export default function Navigation() {
   const { isAuthenticated, loading } = useAuthUser();
   const [isDark, setIsDark] = useState(() => {
     if (typeof document === "undefined") return true;
-    return document.body.classList.contains("dark") || document.documentElement.classList.contains("dark");
+    return document.documentElement.classList.contains("dark") || document.body.classList.contains("dark");
   });
 
   useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
     document.body.classList.toggle("dark", isDark);
   }, [isDark]);
 

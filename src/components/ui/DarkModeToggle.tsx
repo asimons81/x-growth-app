@@ -5,12 +5,13 @@ import { Moon, Sun } from "lucide-react";
 
 export function DarkModeToggle() {
   const [isDark, setIsDark] = useState(() => {
-    if (typeof document === "undefined") return false;
-    return document.body.classList.contains("dark");
+    if (typeof document === "undefined") return true;
+    return document.documentElement.classList.contains("dark") || document.body.classList.contains("dark");
   });
 
   const handleToggle = () => {
     const next = !isDark;
+    document.documentElement.classList.toggle("dark", next);
     document.body.classList.toggle("dark", next);
     setIsDark(next);
   };

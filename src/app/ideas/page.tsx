@@ -28,7 +28,6 @@ interface Idea {
 }
 
 const TOPICS = ["AI", "Tech", "Coding", "Growth", "Photography", "UFC", "Personal", "News", "Other"];
-const NOW_MS = Date.now();
 
 const TOPIC_COLORS: Record<string, string> = {
   AI: "indigo",
@@ -175,6 +174,7 @@ function ExpandedModal({
 }
 
 export default function IdeasPage() {
+  const nowMs = Date.now();
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [loading, setLoading] = useState(true);
   const [newIdea, setNewIdea] = useState("");
@@ -397,7 +397,7 @@ export default function IdeasPage() {
               onDelete={deleteIdea}
               onExpand={expandIdea}
               expandingId={expandingId}
-              nowMs={NOW_MS}
+              nowMs={nowMs}
             />
           ))}
         </div>

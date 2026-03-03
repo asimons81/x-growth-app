@@ -78,7 +78,7 @@ export default function Home() {
       </div>
 
       {/* Feature grid */}
-      <div className="px-6 pb-16 max-w-4xl mx-auto lg:ml-[240px] lg:max-w-4xl">
+      <div className="px-6 pb-16 max-w-4xl mx-auto">
         <p className="text-xs font-semibold uppercase tracking-widest text-[#4b5563] mb-4">All features</p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {features.map((feature) => {

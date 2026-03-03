@@ -154,8 +154,8 @@ export default function AnalyticsPage() {
         headers: withUserHeaders(),
       });
       if (res.ok) {
-        const data = await res.json();
-        const enriched = (data || []).map((p: PostAnalytics) => ({
+        const json = await res.json();
+        const enriched = ((json.data as PostAnalytics[]) || []).map((p: PostAnalytics) => ({
           ...p,
           engagement_rate:
             p.impressions > 0

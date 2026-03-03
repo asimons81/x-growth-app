@@ -62,7 +62,18 @@ export async function GET(request: NextRequest) {
         data = schedule;
         break;
       }
-        
+
+      case 'posts': {
+        const { data: posts } = await supabase
+          .from('posts')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('source', 'imported')
+          .order('posted_at', { ascending: false });
+        data = posts;
+        break;
+      }
+
       default:
         return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
     }

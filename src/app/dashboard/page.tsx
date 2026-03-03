@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { dataApi } from "@/lib/data";
+import { withUserHeaders } from "@/lib/client-user";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -28,6 +29,7 @@ interface DashboardStats {
   ideasCount: number;
   hooksCount: number;
   voiceProfileReady: boolean;
+  apiKeyConfigured: boolean;
 }
 
 interface StatCardProps {
@@ -107,7 +109,7 @@ function StreakCard() {
 
       <p className="text-xs text-[#4b5563]">
         {weekCount >= weekGoal
-          ? "Week goal reached! !"
+          ? "Week goal reached! 🎉"
           : `${weekGoal - weekCount} more post${weekGoal - weekCount !== 1 ? "s" : ""} to hit your goal`}
       </p>
     </Card>
@@ -217,6 +219,7 @@ export default function DashboardPage() {
     ideasCount: 0,
     hooksCount: 0,
     voiceProfileReady: false,
+    apiKeyConfigured: false,
   });
   const [loading, setLoading] = useState(true);
 
@@ -224,16 +227,24 @@ export default function DashboardPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const [drafts, schedule, ideas, hooks] = await Promise.all([
+        const [drafts, schedule, ideas, hooks, keysRes] = await Promise.all([
           dataApi.getDrafts(),
           dataApi.getSchedule(),
           dataApi.getIdeas(),
           dataApi.getHooks(),
+          fetch("/api/settings/keys", { headers: withUserHeaders() }).catch(() => null),
         ]);
 
         let voiceProfileReady = false;
+        let apiKeyConfigured = false;
         try {
           voiceProfileReady = !!localStorage.getItem("voice_profile");
+        } catch {}
+        try {
+          if (keysRes?.ok) {
+            const keys = await keysRes.json();
+            apiKeyConfigured = Array.isArray(keys) && keys.some((k: { provider: string }) => k.provider === "google");
+          }
         } catch {}
 
         setStats({
@@ -242,6 +253,7 @@ export default function DashboardPage() {
           ideasCount: ideas.length,
           hooksCount: hooks.length,
           voiceProfileReady,
+          apiKeyConfigured,
         });
       } catch (err) {
         console.error("Failed to load dashboard:", err);
@@ -320,43 +332,76 @@ export default function DashboardPage() {
         <UpNextCard count={stats.scheduledPosts} loading={loading} />
 
         {/* Getting started card */}
-        <Card className="p-5">
-          <p className="text-sm font-semibold text-[#f1f5f9] mb-3 flex items-center gap-2">
-            <Target size={14} className="text-purple-400" />
-            Getting started
-          </p>
-          <ol className="space-y-2">
-            {[
-              { step: "Add your Gemini API key", href: "/settings", done: false },
-              { step: "Set up your voice profile", href: "/library/voice", done: stats.voiceProfileReady },
-              { step: "Capture your first idea", href: "/ideas", done: stats.ideasCount > 0 },
-              { step: "Generate your first draft", href: "/compose", done: stats.totalDrafts > 0 },
-              { step: "Schedule a post", href: "/schedule", done: stats.scheduledPosts > 0 },
-            ].map(({ step, href, done }) => (
-              <li key={step}>
-                <Link href={href} className="flex items-center gap-2.5 text-sm group">
-                  <span
-                    className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
-                      done
-                        ? "bg-emerald-500 border-emerald-500"
-                        : "border-[#2a2a45] group-hover:border-indigo-500"
-                    }`}
-                  >
-                    {done && (
-                      <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
-                        <path d="M1 3l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </span>
-                  <span className={done ? "line-through text-[#4b5563]" : "text-[#94a3b8] group-hover:text-[#f1f5f9] transition-colors"}>
-                    {step}
-                  </span>
-                  {!done && <ArrowUpRight size={12} className="ml-auto text-[#4b5563] group-hover:text-indigo-400 transition-colors" />}
-                </Link>
-              </li>
-            ))}
-          </ol>
-        </Card>
+        {(() => {
+          const steps = [
+            { step: "Add your Gemini API key", href: "/settings", done: stats.apiKeyConfigured },
+            { step: "Set up your voice profile", href: "/library/voice", done: stats.voiceProfileReady },
+            { step: "Capture your first idea", href: "/ideas", done: stats.ideasCount > 0 },
+            { step: "Generate your first draft", href: "/compose", done: stats.totalDrafts > 0 },
+            { step: "Schedule a post", href: "/schedule", done: stats.scheduledPosts > 0 },
+          ];
+          const completedCount = steps.filter((s) => s.done).length;
+          const allDone = completedCount === steps.length;
+
+          return (
+            <Card className="p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-semibold text-[#f1f5f9] flex items-center gap-2">
+                  <Target size={14} className="text-purple-400" />
+                  Getting started
+                </p>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  allDone
+                    ? "bg-emerald-500/15 text-emerald-400"
+                    : "bg-[#1c1c2e] text-[#4b5563]"
+                }`}>
+                  {completedCount}/{steps.length}
+                </span>
+              </div>
+              {!loading && (
+                <div className="h-1 bg-[#1c1c2e] rounded-full overflow-hidden mb-4">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-700"
+                    style={{ width: `${(completedCount / steps.length) * 100}%` }}
+                  />
+                </div>
+              )}
+              <ol className="space-y-2">
+                {steps.map(({ step, href, done }) => (
+                  <li key={step}>
+                    <Link href={href} className="flex items-center gap-2.5 text-sm group">
+                      <span
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                          done
+                            ? "bg-emerald-500 border-emerald-500"
+                            : "border-[#2a2a45] group-hover:border-indigo-500"
+                        }`}
+                      >
+                        {done && (
+                          <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+                            <path d="M1 3l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
+                      </span>
+                      <span className={done ? "line-through text-[#4b5563]" : "text-[#94a3b8] group-hover:text-[#f1f5f9] transition-colors"}>
+                        {step}
+                      </span>
+                      {!done && <ArrowUpRight size={12} className="ml-auto text-[#4b5563] group-hover:text-indigo-400 transition-colors" />}
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+              {allDone && (
+                <p className="text-xs text-emerald-400 mt-3 flex items-center gap-1.5">
+                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                    <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  All set! You&apos;re ready to grow.
+                </p>
+              )}
+            </Card>
+          );
+        })()}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { Suspense, useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { withUserHeaders } from "@/lib/client-user";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { Card } from "@/components/ui/Card";
@@ -257,11 +258,17 @@ function DraftCard({
   );
 }
 
-export default function ComposePage() {
+function ComposeContent() {
   const { isAuthenticated, loading: authLoading } = useAuthUser();
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<"single" | "thread">("single");
   const [topic, setTopic] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const topicParam = searchParams.get("topic");
+    if (topicParam) setTopic(decodeURIComponent(topicParam));
+  }, [searchParams]);
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [scores, setScores] = useState<Record<number, Score>>({});
   const [scoringSet, setScoringSet] = useState<Set<number>>(new Set());
@@ -507,5 +514,13 @@ export default function ComposePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ComposePage() {
+  return (
+    <Suspense>
+      <ComposeContent />
+    </Suspense>
   );
 }
