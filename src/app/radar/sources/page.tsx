@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { CheckCircle, AlertTriangle, XCircle, Globe, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -64,15 +64,15 @@ export default function SourcesPage() {
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState('all');
 
-  async function fetchSources() {
+  const fetchSources = useCallback(async () => {
     setLoading(true);
     const res = await fetch('/api/radar/sources');
     const data = await res.json() as { data?: Source[] };
     setSources(data.data ?? []);
     setLoading(false);
-  }
+  }, []);
 
-  useEffect(() => { fetchSources(); }, []);
+  useEffect(() => { fetchSources(); }, [fetchSources]);
 
   async function toggleSource(source: Source) {
     const res = await fetch('/api/radar/sources', {

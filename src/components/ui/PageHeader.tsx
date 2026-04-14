@@ -10,19 +10,19 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, icon, action }: PageHeaderProps) {
   return (
-    <div className="flex items-start justify-between mb-8">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-6 border-b border-ui-border/50">
+      <div className="flex items-center gap-4">
         {icon && (
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500 text-white shadow-lg shadow-brand-500/20">
             {icon}
           </div>
         )}
         <div>
-          <h1 className="text-2xl font-bold text-[#f1f5f9]">{title}</h1>
-          {description && <p className="text-sm text-[#94a3b8] mt-0.5">{description}</p>}
+          <h1 className="text-3xl font-black tracking-tight text-text-main">{title}</h1>
+          {description && <p className="text-sm font-medium text-text-subtle mt-1">{description}</p>}
         </div>
       </div>
-      <div className="shrink-0 flex items-center gap-2">
+      <div className="flex items-center gap-3">
         {action}
         <DarkModeToggle />
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { HTMLAttributes, forwardRef } from "react";
+import { cn } from "@/lib/utils";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   glow?: boolean;
@@ -12,7 +13,12 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         ref={ref}
-        className={`glass-card ${glow ? "accent-glow" : ""} ${elevated ? "bg-[#161625]" : ""} ${className}`}
+        className={cn(
+          "bg-ui-surface border border-ui-border rounded-2xl overflow-hidden transition-all duration-300",
+          elevated && "bg-ui-surface-elevated shadow-xl shadow-black/40",
+          glow && "border-brand-500/30 ring-1 ring-brand-500/10",
+          className
+        )}
         {...props}
       >
         {children}
@@ -25,7 +31,7 @@ Card.displayName = "Card";
 
 export function CardHeader({ className = "", children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`px-6 py-5 border-b border-[#1e1e35] ${className}`} {...props}>
+    <div className={cn("px-8 py-6 border-b border-ui-border-muted bg-ui-surface-elevated/30", className)} {...props}>
       {children}
     </div>
   );
@@ -33,7 +39,7 @@ export function CardHeader({ className = "", children, ...props }: HTMLAttribute
 
 export function CardContent({ className = "", children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`px-6 py-5 ${className}`} {...props}>
+    <div className={cn("px-8 py-6", className)} {...props}>
       {children}
     </div>
   );
@@ -41,7 +47,7 @@ export function CardContent({ className = "", children, ...props }: HTMLAttribut
 
 export function CardTitle({ className = "", children, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h3 className={`font-semibold text-[#f1f5f9] ${className}`} {...props}>
+    <h3 className={cn("text-lg font-bold tracking-tight text-text-main", className)} {...props}>
       {children}
     </h3>
   );

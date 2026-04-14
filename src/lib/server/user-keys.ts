@@ -90,6 +90,23 @@ export async function deleteUserApiKey(userId: string, id: string) {
   if (error) throw error;
 }
 
+export async function getUserPreferredProvider(userId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('user_api_keys')
+    .select('provider')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    if ((error as { code?: string }).code === 'PGRST205') return null;
+    throw error;
+  }
+  return data?.provider || null;
+}
+
 export async function getUserApiKey(userId: string, provider: string): Promise<string | null> {
   const { data, error } = await supabase
     .from('user_api_keys')

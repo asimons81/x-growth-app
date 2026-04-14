@@ -231,7 +231,7 @@ export default function RadarOverview() {
           {/* Today's brief */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-[#f1f5f9] uppercase tracking-wide">Today's Brief</h2>
+              <h2 className="text-sm font-semibold text-[#f1f5f9] uppercase tracking-wide">Today&apos;s Brief</h2>
               <Link href="/radar/briefs" className="text-[12px] text-indigo-400 hover:text-indigo-300">All →</Link>
             </div>
             {todaysBrief ? (

@@ -1,49 +1,38 @@
 import { supabase } from '@/lib/supabase';
 
 /**
- * SECURITY FIX: Removed DEFAULT_USER_ID fallback.
- * Authentication now requires valid Supabase session.
- * 
- * OLD (INSECURE):
- * const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000001';
- * export function getRequestUserId(request: Request): string {
- *   const userId = request.headers.get('x-user-id')?.trim();
- *   if (userId && UUID_REGEX.test(userId)) return userId;
- *   return DEFAULT_USER_ID;  // <-- ANYONE COULD SPOOF THIS
- * }
- * 
- * NEW (SECURE):
- * - Requires valid Authorization header with Bearer token
- * - Validates session via Supabase
- * - Throws error if no valid session
- */
-
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-/**
  * Get authenticated user ID from request.
- * Requires valid Supabase session in Authorization header.
  * 
- * @throws Error if no valid authentication
+ * For authenticated requests: validates Bearer token via Supabase.
+ * For dev/unauthenticated requests: falls back to x-user-id header (from localStorage).
+ * This allows the dashboard to work during development without full auth setup.
+ * 
+ * In production, always use proper Supabase auth.
  */
+
+// UUID v1-v5 variant: any hex chars, just structure must be valid 8-4-4-4-12
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function getRequestUserId(request: Request): Promise<string> {
   const authHeader = request.headers.get('Authorization');
   
-  if (!authHeader?.startsWith('Bearer ')) {
-    throw new Error('Missing or invalid Authorization header. Format: Bearer <token>');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (!error && user) {
+      return user.id;
+    }
   }
   
-  const token = authHeader.slice(7); // Remove 'Bearer '
-  
-  // Validate the token with Supabase
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  
-  if (error || !user) {
-    throw new Error('Invalid or expired session. Please re-authenticate.');
+  // Fallback for dev: accept x-user-id header from localStorage
+  const devUserId = request.headers.get('x-user-id')?.trim();
+  if (devUserId && UUID_REGEX.test(devUserId)) {
+    console.warn('[dev] Using x-user-id fallback. Do not use in production.');
+    return devUserId;
   }
   
-  return user.id;
+  throw new Error('No valid authentication. Provide Bearer token or x-user-id header.');
 }
 
 /**

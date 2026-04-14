@@ -1,36 +1,43 @@
 import { NextResponse } from 'next/server';
-import { AIService } from '@/lib/ai';
+import { AIService, resolveProvider, getEnvApiKey } from '@/lib/ai';
+import { AIProviderType } from '@/lib/ai-providers';
 import { getRequestUserId, ensureUserExists } from '@/lib/server-user';
-import { getUserApiKey } from '@/lib/server/user-keys';
+import { getUserApiKey, getUserPreferredProvider } from '@/lib/server/user-keys';
 import { supabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   try {
-    const { posts, apiKey: requestApiKey } = await request.json();
+    const { posts, provider: requestedProvider, apiKey: requestApiKey } = await request.json();
     const userId = await getRequestUserId(request);
-    
+
     if (!posts || !Array.isArray(posts) || posts.length < 5) {
       return NextResponse.json(
         { error: 'Need at least 5 posts' },
         { status: 400 }
       );
     }
-    
-    const storedApiKey = await getUserApiKey(userId, 'google');
-    const envApiKey =
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_API_KEY ||
-      process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-    const apiKey = (storedApiKey as string | null) || requestApiKey || envApiKey;
 
-    if (!apiKey) {
+    const storedProvider = await getUserPreferredProvider(userId);
+    const storedApiKey = storedProvider
+      ? await getUserApiKey(userId, storedProvider)
+      : null;
+    const envApiKey = storedProvider ? undefined : getDefaultEnvApiKey(storedProvider || 'gemini');
+    const apiKey = requestApiKey || storedApiKey || envApiKey;
+
+    if (!apiKey && requestedProvider !== 'ollama') {
       return NextResponse.json(
-        { error: 'No Gemini API key. Add it in Settings.' },
+        { error: `No API key for ${requestedProvider || 'gemini'}. Add it in Settings.` },
         { status: 400 }
       );
     }
-    
-    const ai = new AIService(apiKey);
+
+    const { provider } = resolveProvider(
+      requestedProvider as AIProviderType | undefined,
+      storedProvider as AIProviderType | undefined,
+      apiKey
+    );
+
+    const ai = new AIService(provider, { apiKey: apiKey || undefined });
     const profile = await ai.extractVoiceProfile(posts);
 
     await ensureUserExists(userId);
@@ -48,8 +55,8 @@ export async function POST(request: Request) {
       },
       { onConflict: 'user_id' }
     );
-    
-    return NextResponse.json({ profile });
+
+    return NextResponse.json({ profile, provider });
   } catch (err) {
     console.error('Voice extraction error:', err);
     const errorMessage =
@@ -62,5 +69,18 @@ export async function POST(request: Request) {
       { error: errorMessage || 'Extraction failed' },
       { status: 500 }
     );
+  }
+}
+
+function getDefaultEnvApiKey(provider: string): string | undefined {
+  switch (provider) {
+    case 'openai':
+      return process.env.OPENAI_API_KEY;
+    case 'anthropic':
+      return process.env.ANTHROPIC_API_KEY;
+    case 'gemini':
+      return process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    default:
+      return undefined;
   }
 }

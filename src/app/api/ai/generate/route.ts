@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
-import { AIService, VoiceProfileInput } from '@/lib/ai';
+import { AIService, resolveProvider } from '@/lib/ai';
+import { AIProviderType } from '@/lib/ai-providers';
+import { VoiceProfileInput, getEnvApiKey } from '@/lib/ai';
 import { getRequestUserId } from '@/lib/server-user';
-import { getUserApiKey } from '@/lib/server/user-keys';
+import { getUserApiKey, getUserPreferredProvider } from '@/lib/server/user-keys';
 import { supabase } from '@/lib/supabase';
 
 const FALLBACK_VOICE_PROFILE: VoiceProfileInput = {
@@ -15,28 +17,43 @@ const FALLBACK_VOICE_PROFILE: VoiceProfileInput = {
 
 export async function POST(request: Request) {
   try {
-    const { topic, count = 3, username = 'User', apiKey: requestApiKey, voiceProfile } = await request.json();
+    const {
+      topic,
+      count = 3,
+      username = 'User',
+      provider: requestedProvider,
+      apiKey: requestApiKey,
+      voiceProfile,
+    } = await request.json();
     const userId = await getRequestUserId(request);
-    
+
     if (!topic) {
       return NextResponse.json({ error: 'Topic required' }, { status: 400 });
     }
 
-    const storedApiKey = await getUserApiKey(userId, 'google');
-    const envApiKey =
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_API_KEY ||
-      process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-    const apiKey = (storedApiKey as string | null) || requestApiKey || envApiKey;
+    const storedProvider = await getUserPreferredProvider(userId);
+    const storedApiKey = storedProvider
+      ? await getUserApiKey(userId, storedProvider)
+      : null;
+    const envApiKey = storedProvider
+      ? getEnvApiKey(storedProvider as AIProviderType)
+      : getEnvApiKey('gemini');
+    const apiKey = requestApiKey || storedApiKey || envApiKey;
 
-    if (!apiKey) {
+    if (!apiKey && requestedProvider !== 'ollama') {
       return NextResponse.json(
-        { error: 'No Gemini API key. Add in Settings.' },
+        { error: `No API key. Add in Settings.` },
         { status: 400 }
       );
     }
-    
-    const ai = new AIService(apiKey);
+
+    const { provider } = resolveProvider(
+      requestedProvider as AIProviderType | undefined,
+      storedProvider as AIProviderType | undefined,
+      apiKey
+    );
+
+    const ai = new AIService(provider, { apiKey: apiKey || undefined });
     let selectedVoiceProfile: VoiceProfileInput = FALLBACK_VOICE_PROFILE;
 
     if (voiceProfile && Array.isArray(voiceProfile.commonWords)) {
@@ -44,7 +61,9 @@ export async function POST(request: Request) {
     } else {
       const { data: storedProfile } = await supabase
         .from('voice_profiles')
-        .select('common_words, sentence_starts, tone_keywords, cta_patterns, formality_score, avg_post_length')
+        .select(
+          'common_words, sentence_starts, tone_keywords, cta_patterns, formality_score, avg_post_length'
+        )
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -60,12 +79,17 @@ export async function POST(request: Request) {
       }
     }
 
-    const drafts = await ai.generateDrafts(topic, selectedVoiceProfile, username, count);
+    const drafts = await ai.generateDrafts(
+      topic,
+      selectedVoiceProfile,
+      username,
+      count
+    );
     const usedFallbackVoiceProfile = selectedVoiceProfile === FALLBACK_VOICE_PROFILE;
 
     return NextResponse.json({
       drafts,
-      meta: { usedFallbackVoiceProfile },
+      meta: { usedFallbackVoiceProfile, provider },
     });
   } catch (err) {
     console.error('Generation error:', err);

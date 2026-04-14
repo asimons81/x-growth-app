@@ -12,6 +12,18 @@ async function requestData(path: string, options: RequestInit = {}) {
 }
 
 export const dataApi = {
+  async getDashboardStats(headers?: HeadersInit) {
+    const json = await requestData(`${API_URL}?type=dashboard-stats`, { headers });
+    return json.data || {
+      totalDrafts: 0,
+      scheduledPosts: 0,
+      ideasCount: 0,
+      hooksCount: 0,
+      voiceProfileReady: false,
+      apiKeyConfigured: false
+    };
+  },
+
   async getIdeas() {
     const json = await requestData(`${API_URL}?type=ideas`);
     return json.data || [];
@@ -133,5 +145,42 @@ export const dataApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'schedule', action: 'delete', data: { id } }),
     });
+  },
+
+  async getPostingTimes(): Promise<{
+    slots: Array<{ day: number; hour: number; avgEngagement: number; avgImpressions: number; postCount: number; score: number }>;
+    bestTime: string | null;
+    totalPostsAnalyzed: number;
+  }> {
+    const json = await requestData(`${API_URL}?type=posting-times`);
+    return json.data || { slots: [], bestTime: null, totalPostsAnalyzed: 0 };
+  },
+
+  async importAnalytics(file: File): Promise<{ imported: number; skipped: number; errors: string[] }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', 'analytics');
+    const res = await fetch('/api/import', {
+      method: 'POST',
+      headers: withUserHeaders(),
+      body: formData,
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Import failed');
+    return { imported: json.imported, skipped: json.skipped, errors: json.errors || [] };
+  },
+
+  async importPosts(file: File): Promise<{ imported: number; skipped: number; errors: string[] }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', 'posts');
+    const res = await fetch('/api/import', {
+      method: 'POST',
+      headers: withUserHeaders(),
+      body: formData,
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Import failed');
+    return { imported: json.imported, skipped: json.skipped, errors: json.errors || [] };
   },
 };

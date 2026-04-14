@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import {
   TrendingUp,
@@ -10,134 +10,138 @@ import {
   BarChart2,
   Zap,
   Shuffle,
-  ArrowUpRight,
-  Sparkles,
   ChevronRight,
+  ArrowRight,
 } from "lucide-react";
 
 const features = [
-  { href: "/compose", label: "Compose", icon: PenLine, description: "Generate AI drafts in your voice", color: "text-indigo-400", bg: "bg-indigo-500/10" },
-  { href: "/ideas", label: "Ideas", icon: Lightbulb, description: "Brain dump and expand ideas with AI", color: "text-amber-400", bg: "bg-amber-500/10" },
-  { href: "/schedule", label: "Schedule", icon: Calendar, description: "Queue posts for the perfect time", color: "text-emerald-400", bg: "bg-emerald-500/10" },
-  { href: "/analytics", label: "Analytics", icon: BarChart2, description: "Track performance and trends", color: "text-purple-400", bg: "bg-purple-500/10" },
-  { href: "/hooks", label: "Hook Generator", icon: Zap, description: "Create scroll-stopping openers", color: "text-yellow-400", bg: "bg-yellow-500/10" },
-  { href: "/repurpose", label: "Repurpose", icon: Shuffle, description: "Turn one post into many formats", color: "text-cyan-400", bg: "bg-cyan-500/10" },
-  { href: "/library", label: "Library", icon: BookOpen, description: "Your hooks, voice, topics and drafts", color: "text-pink-400", bg: "bg-pink-500/10" },
+  { href: "/compose", label: "AI Compose", icon: PenLine, description: "Generate drafts that sound like you.", tag: "Smart" },
+  { href: "/ideas", label: "Ideas", icon: Lightbulb, description: "Brain dump and expand with AI.", tag: "Focus" },
+  { href: "/schedule", label: "Schedule", icon: Calendar, description: "Perfect timing, every time.", tag: "Automate" },
+  { href: "/analytics", label: "Analytics", icon: BarChart2, description: "Deep performance tracking.", tag: "Metrics" },
+  { href: "/hooks", label: "Hooks", icon: Zap, description: "Stop the scroll with better openers.", tag: "Growth" },
+  { href: "/repurpose", label: "Repurpose", icon: Shuffle, description: "One post, infinite formats.", tag: "Speed" },
 ];
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
-      {/* Hero */}
-      <div className="relative overflow-hidden px-6 pt-20 pb-16 lg:pt-28 lg:pb-20">
-        {/* Glow background */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,0.15) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 50%, rgba(139,92,246,0.08) 0%, transparent 50%)",
-          }}
-        />
-
-        <div className="max-w-4xl mx-auto relative">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-              <TrendingUp size={18} className="text-white" />
+    <main className="min-h-screen bg-ui-bg selection:bg-brand-500/30">
+      {/* Structural Header */}
+      <nav className="sticky top-0 z-50 w-full border-b border-ui-border/50 bg-ui-bg/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-white shadow-lg shadow-brand-500/20">
+              <TrendingUp size={18} />
             </div>
-            <span className="font-bold text-[#f1f5f9]">GrowthOS</span>
-            <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium ml-1">
-              for X
-            </span>
+            <span className="text-lg font-bold tracking-tight text-text-main">GrowthOS</span>
           </div>
-
-          <h1 className="text-4xl lg:text-5xl font-bold text-[#f1f5f9] leading-tight mb-4">
-            Your AI-powered X{" "}
-            <span className="gradient-text">growth operating system</span>
-          </h1>
-          <p className="text-lg text-[#94a3b8] max-w-2xl mb-8">
-            Generate posts in your voice, build hooks that convert, track performance, and
-            schedule content -- all in one place. Free forever.
-          </p>
-
-          <div className="flex flex-wrap gap-3">
+          <div className="hidden items-center gap-8 md:flex">
+            <Link href="/dashboard" className="text-sm font-medium text-text-subtle hover:text-text-main transition-colors">Platform</Link>
+            <Link href="/library" className="text-sm font-medium text-text-subtle hover:text-text-main transition-colors">Library</Link>
+            <Link href="/settings" className="text-sm font-medium text-text-subtle hover:text-text-main transition-colors">Settings</Link>
+          </div>
+          <div className="flex items-center gap-3">
             <Link href="/dashboard">
-              <Button size="lg" className="gap-2">
-                <Sparkles size={18} />
-                Open Dashboard
+              <Button size="sm">Get Started</Button>
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Modern Hero Section */}
+      <section className="relative px-6 pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden">
+        {/* Subtle grid pattern for texture */}
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+        
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="mx-auto mb-6 flex w-fit items-center rounded-full border border-ui-border bg-ui-surface-elevated px-4 py-1.5 backdrop-blur-sm">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-brand-400">Next Gen Performance</span>
+            <div className="mx-2 h-1 w-1 rounded-full bg-ui-border" />
+            <span className="text-[11px] font-medium text-text-subtle">V2.0 Now Live</span>
+          </div>
+          
+          <h1 className="mb-6 text-5xl font-black tracking-tighter text-text-main md:text-7xl lg:text-8xl">
+            Scale your presence <br />
+            <span className="text-brand-500">without the grind.</span>
+          </h1>
+          
+          <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-text-subtle md:text-xl">
+            The all-in-one growth operating system for professional creators. 
+            Automate the friction, focus on the impact.
+          </p>
+          
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Link href="/dashboard">
+              <Button size="lg" className="w-full sm:w-auto px-10">
+                Launch Dashboard
+                <ArrowRight size={18} className="ml-1" />
               </Button>
             </Link>
             <Link href="/compose">
-              <Button variant="secondary" size="lg" className="gap-2">
-                <PenLine size={18} />
-                Start writing
-                <ChevronRight size={16} />
+              <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+                Try AI Compose
               </Button>
             </Link>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Feature grid */}
-      <div className="px-6 pb-16 max-w-4xl mx-auto">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[#4b5563] mb-4">All features</p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {features.map((feature) => {
-            const Icon = feature.icon;
-            return (
-              <Link key={feature.href} href={feature.href}>
-                <Card className="p-5 cursor-pointer group hover:-translate-y-0.5 transition-all duration-200 h-full">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${feature.bg}`}>
-                      <Icon size={16} className={feature.color} />
-                    </div>
-                    <ArrowUpRight
-                      size={13}
-                      className="text-[#4b5563] group-hover:text-[#94a3b8] transition-colors"
-                    />
-                  </div>
-                  <p className="font-semibold text-[#f1f5f9] text-sm mb-1">{feature.label}</p>
-                  <p className="text-xs text-[#94a3b8]">{feature.description}</p>
-                </Card>
-              </Link>
-            );
-          })}
+      {/* Feature Grid with Modern Cards */}
+      <section className="mx-auto max-w-7xl px-6 pb-32">
+        <div className="mb-12 flex items-end justify-between border-b border-ui-border pb-6">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-text-main">Ecosystem</h2>
+            <p className="text-sm text-text-muted">Integrated tools built for speed.</p>
+          </div>
+          <Link href="/library" className="group flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-brand-400 hover:text-brand-300 transition-colors">
+            View All Tools
+            <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </div>
 
-        {/* Quick start */}
-        <Card className="mt-8 p-6">
-          <h3 className="font-semibold text-[#f1f5f9] mb-4 flex items-center gap-2">
-            <Sparkles size={15} className="text-indigo-400" />
-            Quick start guide
-          </h3>
-          <ol className="space-y-3">
-            {[
-              { step: "Go to Settings and add your Gemini API key", href: "/settings" },
-              { step: "Build your Voice Profile from sample posts", href: "/library/voice" },
-              { step: "Brain-dump some content ideas", href: "/ideas" },
-              { step: "Generate your first AI-drafted post", href: "/compose" },
-              { step: "Schedule it and track your growth", href: "/schedule" },
-            ].map(({ step, href }, i) => (
-              <li key={i}>
-                <Link
-                  href={href}
-                  className="flex items-start gap-3 group"
-                >
-                  <span className="w-6 h-6 rounded-full bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center text-xs text-indigo-400 font-bold shrink-0">
-                    {i + 1}
-                  </span>
-                  <span className="text-sm text-[#94a3b8] group-hover:text-[#f1f5f9] transition-colors pt-0.5">
-                    {step}
-                  </span>
-                  <ChevronRight
-                    size={14}
-                    className="text-[#4b5563] group-hover:text-indigo-400 transition-colors ml-auto mt-0.5 shrink-0"
-                  />
-                </Link>
-              </li>
-            ))}
-          </ol>
-        </Card>
-      </div>
-    </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {features.map((feature, idx) => (
+            <Link key={feature.href} href={feature.href}>
+              <Card className="h-full hover:border-brand-500/40 hover:-translate-y-1">
+                <CardContent className="flex h-full flex-col p-8">
+                  <div className="mb-6 flex items-center justify-between">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ui-surface-elevated text-brand-400 border border-ui-border shadow-inner">
+                      <feature.icon size={24} />
+                    </div>
+                    <span className="rounded-lg bg-ui-surface-elevated px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-text-muted border border-ui-border">
+                      {feature.tag}
+                    </span>
+                  </div>
+                  <h3 className="mb-2 text-xl font-bold text-text-main">{feature.label}</h3>
+                  <p className="mb-8 text-sm leading-relaxed text-text-subtle">
+                    {feature.description}
+                  </p>
+                  <div className="mt-auto flex items-center gap-1 text-sm font-semibold text-brand-400 group">
+                    Get Started 
+                    <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Modern Footer */}
+      <footer className="border-t border-ui-border bg-ui-surface/30 px-6 py-12">
+        <div className="mx-auto max-w-7xl flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex items-center gap-2.5 grayscale opacity-50">
+            <TrendingUp size={18} />
+            <span className="text-sm font-bold tracking-tight">GrowthOS</span>
+          </div>
+          <p className="text-xs text-text-muted">© 2026 Nexus Systems. Built for X.</p>
+          <div className="flex gap-6">
+            <Link href="#" className="text-xs font-medium text-text-muted hover:text-text-main">Privacy</Link>
+            <Link href="#" className="text-xs font-medium text-text-muted hover:text-text-main">Terms</Link>
+            <Link href="#" className="text-xs font-medium text-text-muted hover:text-text-main">GitHub</Link>
+          </div>
+        </div>
+      </footer>
+    </main>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { ButtonHTMLAttributes, forwardRef } from "react";
+import { cn } from "@/lib/utils"; // Assuming utils exists, if not I'll create it
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "outline";
 type ButtonSize = "sm" | "md" | "lg";
@@ -13,17 +14,17 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: "btn-gradient font-medium",
-  secondary: "bg-[#1c1c2e] text-[#f1f5f9] border border-[#2a2a45] hover:bg-[#22223a] hover:border-[#4f46e5] transition-colors",
-  ghost: "text-[#94a3b8] hover:text-[#f1f5f9] hover:bg-[#1c1c2e] transition-colors",
-  danger: "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 transition-colors",
-  outline: "border border-[#4f46e5] text-indigo-400 hover:bg-[#6366f1]/10 transition-colors",
+  primary: "bg-brand-500 text-white hover:bg-brand-400 active:scale-95 transition-all duration-200 shadow-lg shadow-brand-500/20",
+  secondary: "bg-ui-surface-elevated text-text-main border border-ui-border hover:border-brand-500/50 hover:bg-ui-surface active:scale-95 transition-all duration-200",
+  ghost: "text-text-subtle hover:text-text-main hover:bg-ui-surface active:scale-95 transition-all duration-200",
+  danger: "bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 active:scale-95 transition-all duration-200",
+  outline: "border-2 border-brand-500 text-brand-400 hover:bg-brand-500/10 active:scale-95 transition-all duration-200",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "px-3 py-1.5 text-xs rounded-lg",
-  md: "px-5 py-2.5 text-sm rounded-xl",
-  lg: "px-7 py-3.5 text-base rounded-xl",
+  sm: "px-4 py-2 text-xs rounded-xl",
+  md: "px-6 py-3 text-sm rounded-2xl",
+  lg: "px-8 py-4 text-base rounded-2xl",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -44,15 +45,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
-        className={`
-          inline-flex items-center justify-center gap-2 font-medium
-          cursor-pointer select-none
-          disabled:opacity-40 disabled:cursor-not-allowed
-          ${variantClasses[variant]}
-          ${sizeClasses[size]}
-          ${fullWidth ? "w-full" : ""}
-          ${className}
-        `}
+        className={cn(
+          "inline-flex items-center justify-center gap-2 font-semibold tracking-tight cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed",
+          variantClasses[variant],
+          sizeClasses[size],
+          fullWidth && "w-full",
+          className
+        )}
         {...props}
       >
         {loading && (

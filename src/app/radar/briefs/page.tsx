@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { BookOpen, ExternalLink, FileText } from 'lucide-react';
 
@@ -32,6 +32,15 @@ export default function BriefsPage() {
   const [loading, setLoading] = useState(true);
   const [entriesLoading, setEntriesLoading] = useState(false);
 
+  const loadBrief = useCallback(async (brief: Brief) => {
+    setSelectedBrief(brief);
+    setEntriesLoading(true);
+    const res = await fetch(`/api/radar/briefs?date=${brief.date}`);
+    const data = await res.json() as { entries?: BriefEntry[] };
+    setEntries(data.entries ?? []);
+    setEntriesLoading(false);
+  }, []);
+
   useEffect(() => {
     fetch('/api/radar/briefs?limit=30')
       .then((r) => r.json())
@@ -41,16 +50,7 @@ export default function BriefsPage() {
         if (list.length > 0) loadBrief(list[0]);
         setLoading(false);
       });
-  }, []);
-
-  async function loadBrief(brief: Brief) {
-    setSelectedBrief(brief);
-    setEntriesLoading(true);
-    const res = await fetch(`/api/radar/briefs?date=${brief.date}`);
-    const data = await res.json() as { entries?: BriefEntry[] };
-    setEntries(data.entries ?? []);
-    setEntriesLoading(false);
-  }
+  }, [loadBrief]);
 
   const today = new Date().toISOString().slice(0, 10);
   const highPriority = entries.filter((e) => e.section === 'high_priority');

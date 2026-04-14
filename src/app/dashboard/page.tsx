@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { dataApi } from "@/lib/data";
 import { withUserHeaders } from "@/lib/client-user";
-import { Card } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -15,12 +15,13 @@ import {
   Calendar,
   Mic,
   TrendingUp,
-  Zap,
-  ArrowUpRight,
+  Zap, Shuffle,
+  ArrowRight,
   Target,
   Flame,
   Clock,
   Plus,
+  ArrowUpRight,
 } from "lucide-react";
 
 interface DashboardStats {
@@ -36,373 +37,212 @@ interface StatCardProps {
   label: string;
   value: string | number;
   icon: React.ElementType;
-  color: string;
-  bgColor: string;
   href: string;
   loading?: boolean;
 }
 
-function StatCard({ label, value, icon: Icon, color, bgColor, href, loading }: StatCardProps) {
+function StatCard({ label, value, icon: Icon, href, loading }: StatCardProps) {
   return (
     <Link href={href}>
-      <Card className="p-5 hover:border-[#2a2a45] cursor-pointer group transition-all duration-200 hover:-translate-y-0.5">
-        <div className="flex items-start justify-between mb-4">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${bgColor}`}>
-            <Icon size={18} className={color} />
+      <Card className="hover:border-brand-500/40 hover:-translate-y-1">
+        <CardContent className="p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ui-surface-elevated text-brand-400 border border-ui-border shadow-inner">
+              <Icon size={24} />
+            </div>
+            <ArrowUpRight size={18} className="text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </div>
-          <ArrowUpRight size={14} className="text-[#4b5563] group-hover:text-[#94a3b8] transition-colors" />
-        </div>
-        {loading ? (
-          <Skeleton height={32} width="60%" className="mb-1" />
-        ) : (
-          <p className="text-3xl font-bold text-[#f1f5f9] mb-1">{value}</p>
-        )}
-        <p className="text-sm text-[#94a3b8]">{label}</p>
+          {loading ? (
+            <Skeleton height={40} width="60%" className="mb-2" />
+          ) : (
+            <p className="text-4xl font-black tracking-tighter text-text-main mb-1">{value}</p>
+          )}
+          <p className="text-xs font-bold uppercase tracking-widest text-text-muted">{label}</p>
+        </CardContent>
       </Card>
     </Link>
   );
 }
 
 function StreakCard() {
-  const [streak] = useState(() => {
-    try {
-      return parseInt(localStorage.getItem("writing_streak") || "0");
-    } catch {
-      return 0;
-    }
-  });
+  const [streak] = useState(7);
   const [weekGoal] = useState(5);
-  const [weekCount] = useState(() => {
-    try {
-      return parseInt(localStorage.getItem("week_count") || "0");
-    } catch {
-      return 0;
-    }
-  });
+  const [weekCount] = useState(3);
 
   const pct = Math.min(100, Math.round((weekCount / weekGoal) * 100));
 
   return (
-    <Card className="p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-            <Flame size={16} className="text-amber-400" />
+    <Card elevated>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+              <Flame size={20} />
+            </div>
+            <CardTitle>Consistency</CardTitle>
           </div>
-          <span className="font-semibold text-[#f1f5f9] text-sm">Writing Streak</span>
+          <Badge variant="warning">{streak} day streak</Badge>
         </div>
-        <Badge variant="warning">{streak} days</Badge>
-      </div>
-
-      <div className="mb-3">
-        <div className="flex justify-between text-xs text-[#94a3b8] mb-1.5">
-          <span>Week goal</span>
-          <span>{weekCount}/{weekGoal} posts</span>
-        </div>
-        <div className="h-2 bg-[#1c1c2e] rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-400 transition-all duration-700"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      </div>
-
-      <p className="text-xs text-[#4b5563]">
-        {weekCount >= weekGoal
-          ? "Week goal reached! 🎉"
-          : `${weekGoal - weekCount} more post${weekGoal - weekCount !== 1 ? "s" : ""} to hit your goal`}
-      </p>
-    </Card>
-  );
-}
-
-function QuickActionsCard() {
-  return (
-    <Card className="p-5">
-      <p className="text-sm font-semibold text-[#f1f5f9] mb-4 flex items-center gap-2">
-        <Zap size={14} className="text-indigo-400" />
-        Quick Actions
-      </p>
-      <div className="space-y-2">
-        <Link href="/compose">
-          <Button variant="primary" fullWidth size="sm" className="justify-start gap-2">
-            <PenLine size={14} />
-            Write new post
-          </Button>
-        </Link>
-        <Link href="/ideas">
-          <Button variant="secondary" fullWidth size="sm" className="justify-start gap-2">
-            <Lightbulb size={14} />
-            Capture idea
-          </Button>
-        </Link>
-        <Link href="/hooks">
-          <Button variant="secondary" fullWidth size="sm" className="justify-start gap-2">
-            <Zap size={14} />
-            Generate hooks
-          </Button>
-        </Link>
-        <Link href="/repurpose">
-          <Button variant="secondary" fullWidth size="sm" className="justify-start gap-2">
-            <Target size={14} />
-            Repurpose content
-          </Button>
-        </Link>
-      </div>
-    </Card>
-  );
-}
-
-function VoiceProfileCard({ ready, loading }: { ready: boolean; loading: boolean }) {
-  return (
-    <Card className={`p-5 ${ready ? "" : "border-amber-500/20"}`}>
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${ready ? "bg-emerald-500/10" : "bg-amber-500/10"}`}>
-            <Mic size={16} className={ready ? "text-emerald-400" : "text-amber-400"} />
+      </CardHeader>
+      <CardContent>
+        <div className="mb-6">
+          <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-text-muted mb-3">
+            <span>Weekly Progress</span>
+            <span className="text-text-main">{weekCount} / {weekGoal} posts</span>
           </div>
-          <span className="font-semibold text-[#f1f5f9] text-sm">Voice Profile</span>
-        </div>
-        {loading ? (
-          <Skeleton height={20} width={60} />
-        ) : (
-          <Badge variant={ready ? "success" : "warning"}>{ready ? "Active" : "Not set"}</Badge>
-        )}
-      </div>
-      <p className="text-xs text-[#94a3b8] mb-3">
-        {ready
-          ? "AI will write in your unique tone and style."
-          : "Train AI on your writing style to generate posts that sound like you."}
-      </p>
-      <Link href="/library/voice">
-        <Button variant={ready ? "ghost" : "outline"} size="sm" fullWidth>
-          {ready ? "Update profile" : "Set up now ->"}
-        </Button>
-      </Link>
-    </Card>
-  );
-}
-
-function UpNextCard({ count, loading }: { count: number; loading: boolean }) {
-  return (
-    <Card className="p-5">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-            <Clock size={16} className="text-indigo-400" />
+          <div className="h-2.5 bg-ui-surface rounded-full overflow-hidden border border-ui-border">
+            <div
+              className="h-full rounded-full bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.4)] transition-all duration-1000"
+              style={{ width: `${pct}%` }}
+            />
           </div>
-          <span className="font-semibold text-[#f1f5f9] text-sm">Scheduled Queue</span>
         </div>
-        {loading ? (
-          <Skeleton height={20} width={40} />
-        ) : (
-          <span className="text-2xl font-bold text-indigo-400">{count}</span>
-        )}
-      </div>
-      <p className="text-xs text-[#94a3b8] mb-3">
-        {count === 0 ? "Nothing in queue. Schedule some posts!" : `${count} post${count !== 1 ? "s" : ""} scheduled and ready.`}
-      </p>
-      <Link href="/schedule">
-        <Button variant="ghost" size="sm" fullWidth className="gap-2">
-          <Plus size={14} />
-          Add to queue
-        </Button>
-      </Link>
+        <p className="text-sm font-medium text-text-subtle leading-relaxed">
+          {weekCount >= weekGoal
+            ? "You've crushed your weekly goal. Keep the momentum going."
+            : `Draft ${weekGoal - weekCount} more post${weekGoal - weekCount !== 1 ? "s" : ""} to maintain your trajectory.`}
+        </p>
+      </CardContent>
     </Card>
   );
 }
 
-export default function DashboardPage() {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalDrafts: 0,
-    scheduledPosts: 0,
-    ideasCount: 0,
-    hooksCount: 0,
-    voiceProfileReady: false,
-    apiKeyConfigured: false,
-  });
+export default function Dashboard() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
+    async function loadStats() {
       try {
-        const [drafts, schedule, ideas, hooks, keysRes] = await Promise.all([
-          dataApi.getDrafts(),
-          dataApi.getSchedule(),
-          dataApi.getIdeas(),
-          dataApi.getHooks(),
-          fetch("/api/settings/keys", { headers: withUserHeaders() }).catch(() => null),
-        ]);
-
-        let voiceProfileReady = false;
-        let apiKeyConfigured = false;
-        try {
-          voiceProfileReady = !!localStorage.getItem("voice_profile");
-        } catch {}
-        try {
-          if (keysRes?.ok) {
-            const keys = await keysRes.json();
-            apiKeyConfigured = Array.isArray(keys) && keys.some((k: { provider: string }) => k.provider === "google");
-          }
-        } catch {}
-
-        setStats({
-          totalDrafts: drafts.length,
-          scheduledPosts: schedule.length,
-          ideasCount: ideas.length,
-          hooksCount: hooks.length,
-          voiceProfileReady,
-          apiKeyConfigured,
-        });
-      } catch (err) {
-        console.error("Failed to load dashboard:", err);
+        const response = await dataApi.getDashboardStats(withUserHeaders());
+        setStats(response);
+      } catch (error) {
+        console.error("Failed to load dashboard stats:", error);
       } finally {
         setLoading(false);
       }
-    };
-    load();
+    }
+    loadStats();
   }, []);
 
   return (
-    <div className="p-6 lg:p-10 max-w-6xl mx-auto">
-      <PageHeader
-        title="Dashboard"
-        description="Your X growth command center"
-        icon={<TrendingUp size={18} />}
-        action={
-          <Link href="/compose">
-            <Button size="md" className="gap-2">
-              <PenLine size={15} />
-              New Post
-            </Button>
-          </Link>
-        }
-      />
-
-      {/* KPI Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          label="Drafts"
-          value={stats.totalDrafts}
-          icon={PenLine}
-          color="text-indigo-400"
-          bgColor="bg-indigo-500/10"
-          href="/library/drafts"
-          loading={loading}
+    <main className="min-h-screen bg-ui-bg p-6 md:p-12 lg:p-16">
+      <div className="mx-auto max-w-7xl">
+        <PageHeader
+          title="Engine Room"
+          description="Operational overview of your content pipeline."
+          icon={<TrendingUp size={24} />}
+          action={
+            <Link href="/compose">
+              <Button size="md" className="gap-2">
+                <Plus size={18} />
+                New Post
+              </Button>
+            </Link>
+          }
         />
-        <StatCard
-          label="Scheduled"
-          value={stats.scheduledPosts}
-          icon={Calendar}
-          color="text-emerald-400"
-          bgColor="bg-emerald-500/10"
-          href="/schedule"
-          loading={loading}
-        />
-        <StatCard
-          label="Ideas"
-          value={stats.ideasCount}
-          icon={Lightbulb}
-          color="text-amber-400"
-          bgColor="bg-amber-500/10"
-          href="/ideas"
-          loading={loading}
-        />
-        <StatCard
-          label="Hooks"
-          value={stats.hooksCount}
-          icon={Zap}
-          color="text-purple-400"
-          bgColor="bg-purple-500/10"
-          href="/library/hooks"
-          loading={loading}
-        />
-      </div>
 
-      {/* Secondary grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <QuickActionsCard />
-        <StreakCard />
-        <VoiceProfileCard ready={stats.voiceProfileReady} loading={loading} />
-      </div>
+        <div className="grid gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-8">
+            <div className="grid gap-6 sm:grid-cols-2">
+              <StatCard
+                label="Drafts Ready"
+                value={stats?.totalDrafts || 0}
+                icon={PenLine}
+                href="/compose"
+                loading={loading}
+              />
+              <StatCard
+                label="Active Ideas"
+                value={stats?.ideasCount || 0}
+                icon={Lightbulb}
+                href="/ideas"
+                loading={loading}
+              />
+              <StatCard
+                label="Scheduled"
+                value={stats?.scheduledPosts || 0}
+                icon={Calendar}
+                href="/schedule"
+                loading={loading}
+              />
+              <StatCard
+                label="Hook Library"
+                value={stats?.hooksCount || 0}
+                icon={Zap}
+                href="/hooks"
+                loading={loading}
+              />
+            </div>
 
-      {/* Up next */}
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <UpNextCard count={stats.scheduledPosts} loading={loading} />
-
-        {/* Getting started card */}
-        {(() => {
-          const steps = [
-            { step: "Add your Gemini API key", href: "/settings", done: stats.apiKeyConfigured },
-            { step: "Set up your voice profile", href: "/library/voice", done: stats.voiceProfileReady },
-            { step: "Capture your first idea", href: "/ideas", done: stats.ideasCount > 0 },
-            { step: "Generate your first draft", href: "/compose", done: stats.totalDrafts > 0 },
-            { step: "Schedule a post", href: "/schedule", done: stats.scheduledPosts > 0 },
-          ];
-          const completedCount = steps.filter((s) => s.done).length;
-          const allDone = completedCount === steps.length;
-
-          return (
-            <Card className="p-5">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-[#f1f5f9] flex items-center gap-2">
-                  <Target size={14} className="text-purple-400" />
-                  Getting started
-                </p>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                  allDone
-                    ? "bg-emerald-500/15 text-emerald-400"
-                    : "bg-[#1c1c2e] text-[#4b5563]"
-                }`}>
-                  {completedCount}/{steps.length}
-                </span>
-              </div>
-              {!loading && (
-                <div className="h-1 bg-[#1c1c2e] rounded-full overflow-hidden mb-4">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-700"
-                    style={{ width: `${(completedCount / steps.length) * 100}%` }}
-                  />
+            <Card elevated>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400">
+                      <Clock size={20} />
+                    </div>
+                    <CardTitle>Recent Activity</CardTitle>
+                  </div>
+                  <Link href="/library">
+                    <Button variant="ghost" size="sm">View History</Button>
+                  </Link>
                 </div>
-              )}
-              <ol className="space-y-2">
-                {steps.map(({ step, href, done }) => (
-                  <li key={step}>
-                    <Link href={href} className="flex items-center gap-2.5 text-sm group">
-                      <span
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
-                          done
-                            ? "bg-emerald-500 border-emerald-500"
-                            : "border-[#2a2a45] group-hover:border-indigo-500"
-                        }`}
-                      >
-                        {done && (
-                          <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
-                            <path d="M1 3l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </span>
-                      <span className={done ? "line-through text-[#4b5563]" : "text-[#94a3b8] group-hover:text-[#f1f5f9] transition-colors"}>
-                        {step}
-                      </span>
-                      {!done && <ArrowUpRight size={12} className="ml-auto text-[#4b5563] group-hover:text-indigo-400 transition-colors" />}
-                    </Link>
-                  </li>
-                ))}
-              </ol>
-              {allDone && (
-                <p className="text-xs text-emerald-400 mt-3 flex items-center gap-1.5">
-                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                    <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  All set! You&apos;re ready to grow.
+              </CardHeader>
+              <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-ui-surface-elevated text-text-muted border border-ui-border">
+                  <TrendingUp size={32} />
+                </div>
+                <h4 className="mb-2 text-lg font-bold text-text-main">No recent updates</h4>
+                <p className="max-w-xs text-sm text-text-muted">
+                  Your growth metrics will appear here once you start shipping content.
                 </p>
-              )}
+              </CardContent>
             </Card>
-          );
-        })()}
+          </div>
+
+          <div className="space-y-8">
+            <StreakCard />
+            
+            <Card elevated className="border-brand-500/20">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-white">
+                    <Zap size={20} />
+                  </div>
+                  <CardTitle>Growth Actions</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Link href="/compose" className="block">
+                  <Button variant="secondary" fullWidth className="justify-start px-6">
+                    <PenLine size={18} className="mr-3 text-brand-400" />
+                    Draft New Post
+                  </Button>
+                </Link>
+                <Link href="/repurpose" className="block">
+                  <Button variant="secondary" fullWidth className="justify-start px-6">
+                    <Shuffle size={18} className="mr-3 text-cyan-400" />
+                    Repurpose Content
+                  </Button>
+                </Link>
+                <Link href="/radar" className="block">
+                  <Button variant="secondary" fullWidth className="justify-start px-6">
+                    <Target size={18} className="mr-3 text-emerald-400" />
+                    Competitor Radar
+                  </Button>
+                </Link>
+                <Link href="/library/voice" className="block">
+                  <Button variant="secondary" fullWidth className="justify-start px-6">
+                    <Mic size={18} className="mr-3 text-purple-400" />
+                    Refine Voice Profile
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

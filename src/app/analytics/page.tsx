@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { dataApi } from "@/lib/data";
 import { withUserHeaders } from "@/lib/client-user";
 import toast from "react-hot-toast";
 import {
@@ -28,6 +29,7 @@ import {
   Repeat2,
   Upload,
   Info,
+  Clock,
 } from "lucide-react";
 
 interface PostAnalytics {
@@ -146,6 +148,11 @@ export default function AnalyticsPage() {
   const [activeMetric, setActiveMetric] = useState<"impressions" | "likes" | "replies" | "retweets">(
     "impressions"
   );
+  const [postingTimes, setPostingTimes] = useState<{
+    slots: Array<{ day: number; hour: number; avgEngagement: number; avgImpressions: number; postCount: number; score: number }>;
+    bestTime: string | null;
+    totalPostsAnalyzed: number;
+  } | null>(null);
 
   const loadPosts = useCallback(async () => {
     setLoading(true);
@@ -174,6 +181,19 @@ export default function AnalyticsPage() {
   useEffect(() => {
     loadPosts();
   }, [loadPosts]);
+
+  // Load posting times analysis
+  useEffect(() => {
+    const loadPostingTimes = async () => {
+      try {
+        const data = await dataApi.getPostingTimes();
+        setPostingTimes(data);
+      } catch {
+        // Silently fail - this is optional data
+      }
+    };
+    loadPostingTimes();
+  }, []);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -310,6 +330,44 @@ export default function AnalyticsPage() {
             <StatTile label="Total Replies" value={totals.replies} icon={MessageCircle} color="text-emerald-400" bg="bg-emerald-500/10" />
             <StatTile label="Total Retweets" value={totals.retweets} icon={Repeat2} color="text-amber-400" bg="bg-amber-500/10" />
           </div>
+
+          {/* Best posting times */}
+          {postingTimes && postingTimes.totalPostsAnalyzed >= 10 && (
+            <Card className="p-5 mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Clock size={14} className="text-cyan-400" />
+                <span className="font-semibold text-[#f1f5f9] text-sm">Best Times to Post</span>
+                <span className="text-xs text-[#4b5563]">({postingTimes.totalPostsAnalyzed} posts analyzed)</span>
+              </div>
+              {postingTimes.bestTime && (
+                <div className="flex items-center gap-2 mb-4 p-3 rounded-xl bg-gradient-to-r from-cyan-500/10 to-indigo-500/10 border border-cyan-500/20">
+                  <span className="text-xs text-[#94a3b8]">Best time:</span>
+                  <span className="text-sm font-semibold text-cyan-400">{postingTimes.bestTime}</span>
+                </div>
+              )}
+              <div className="space-y-2">
+                {postingTimes.slots.slice(0, 5).map((slot, i) => {
+                  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                  const maxScore = postingTimes.slots[0]?.score || 1;
+                  const barWidth = Math.round((slot.score / maxScore) * 100);
+                  return (
+                    <div key={i} className="flex items-center gap-3">
+                      <span className="text-xs text-[#94a3b8] w-16">{DAY_NAMES[slot.day]} {slot.hour}:00</span>
+                      <div className="flex-1 h-2 bg-[#1c1c2e] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-full transition-all"
+                          style={{ width: `${barWidth}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-[#4b5563] w-12 text-right">
+                        {slot.postCount} post{slot.postCount !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
 
           {/* Performance over time */}
           <Card className="p-5 mb-6">

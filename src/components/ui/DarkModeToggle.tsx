@@ -20,11 +20,11 @@ export function DarkModeToggle() {
     <button
       type="button"
       onClick={handleToggle}
-      className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[#2a2a45] bg-[#161625] text-[#94a3b8] hover:text-[#f1f5f9] hover:border-[#3a3a5a] transition-colors"
+      className="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-ui-border bg-ui-surface text-text-subtle hover:text-text-main hover:border-brand-500/50 transition-all duration-200 shadow-sm"
       aria-label="Toggle dark mode"
       title="Toggle dark mode"
     >
-      {isDark ? <Sun size={16} /> : <Moon size={16} />}
+      {isDark ? <Sun size={18} /> : <Moon size={18} />}
     </button>
   );
 }

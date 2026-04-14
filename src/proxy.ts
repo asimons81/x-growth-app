@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const AUTH_COOKIE_NAME = 'xga-access-token';
+const AUTH_COOKIE_NAME = 'sb-access-token';
 const PUBLIC_ROUTES = new Set([
   '/',
   '/dashboard',

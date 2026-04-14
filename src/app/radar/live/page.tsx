@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 
 interface Article {
@@ -44,16 +44,16 @@ export default function LiveFeedPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [total, setTotal] = useState(0);
 
-  async function fetchArticles() {
+  const fetchArticles = useCallback(async () => {
     setLoading(true);
     const res = await fetch('/api/radar/live?limit=100');
     const data = await res.json() as { data?: Article[]; count?: number };
     setArticles(data.data ?? []);
     setTotal(data.count ?? 0);
     setLoading(false);
-  }
+  }, []);
 
-  useEffect(() => { fetchArticles(); }, []);
+  useEffect(() => { fetchArticles(); }, [fetchArticles]);
 
   const categories = ['all', ...new Set(articles.map((a) => a.source_category).filter(Boolean))].sort();
   const filtered = categoryFilter === 'all' ? articles : articles.filter((a) => a.source_category === categoryFilter);

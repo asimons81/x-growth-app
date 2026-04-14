@@ -1,9 +1,9 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-// Initialize Gemini client
-function getGenAI(apiKey: string) {
-  return new GoogleGenerativeAI(apiKey);
-}
+import {
+  AIProviderType,
+  ProviderConfig,
+  createAIProvider,
+  AIProvider,
+} from './ai-providers';
 
 // Voice profile extraction prompt
 const VOICE_EXTRACTION_PROMPT = `Analyze the EXACT writing style from these actual posts. 
@@ -79,65 +79,47 @@ Return JSON:
   { "type": "reply", "content": "..." }
 ]`;
 
+export interface VoiceProfileInput {
+  commonWords: string[];
+  sentenceStarts: string[];
+  toneKeywords: string[];
+  ctaPatterns: string[];
+  formalityScore: number;
+  avgPostLength: number;
+}
+
 export class AIService {
-  private apiKey: string;
-  
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
+  private provider: AIProvider;
+
+  constructor(providerType: AIProviderType, config: ProviderConfig) {
+    this.provider = createAIProvider(providerType, config);
   }
-  
-  async extractVoiceProfile(posts: string[]): Promise<{
-    commonWords: string[];
-    sentenceStarts: string[];
-    toneKeywords: string[];
-    ctaPatterns: string[];
-    formalityScore: number;
-    avgPostLength: number;
-  }> {
-    const genAI = getGenAI(this.apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
-    
+
+  async extractVoiceProfile(posts: string[]): Promise<VoiceProfileInput> {
     const prompt = VOICE_EXTRACTION_PROMPT.replace('{posts}', posts.join('\n---\n'));
-    
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    
-    // Extract JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]) as VoiceProfileInput;
-    }
-    
-    throw new Error('Failed to parse voice profile');
+    return this.provider.generateContentJson<VoiceProfileInput>(prompt);
   }
-  
+
   async generateDrafts(
-    topic: string, 
+    topic: string,
     voiceProfile: VoiceProfileInput,
     username: string,
     count: number = 3
   ): Promise<Array<{ content: string; hook: string; angle: string }>> {
-    const genAI = getGenAI(this.apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
-    
     const prompt = DRAFT_GENERATION_PROMPT
       .replace('{username}', username)
       .replace('{vprofile}', JSON.stringify(voiceProfile))
       .replace('{topic}', topic)
       .replace('{count}', String(count));
-    
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]) as Array<{ content: string; hook: string; angle: string }>;
-    }
-    
-    throw new Error('Failed to parse drafts');
+
+    return this.provider.generateContentJson<
+      Array<{ content: string; hook: string; angle: string }>
+    >(prompt);
   }
-  
-  async scorePost(content: string): Promise<{
+
+  async scorePost(
+    content: string
+  ): Promise<{
     hook: number;
     clarity: number;
     novelty: number;
@@ -149,71 +131,71 @@ export class AIService {
     overall: number;
     suggestions: string[];
   }> {
-    const genAI = getGenAI(this.apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
-    
     const prompt = SCORING_PROMPT.replace('{content}', content);
-    
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]) as {
-        hook: number;
-        clarity: number;
-        novelty: number;
-        value: number;
-        emotion: number;
-        cta: number;
-        readability: number;
-        authenticity: number;
-        overall: number;
-        suggestions: string[];
-      };
-    }
-    
-    throw new Error('Failed to parse score');
+    return this.provider.generateContentJson<{
+      hook: number;
+      clarity: number;
+      novelty: number;
+      value: number;
+      emotion: number;
+      cta: number;
+      readability: number;
+      authenticity: number;
+      overall: number;
+      suggestions: string[];
+    }>(prompt);
   }
-  
-  async repurposePost(content: string, count: number = 4): Promise<Array<{
-    type: string;
-    content: string;
-  }>> {
-    const genAI = getGenAI(this.apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
-    
+
+  async repurposePost(
+    content: string,
+    count: number = 4
+  ): Promise<Array<{ type: string; content: string }>> {
     const prompt = REPURPOSE_PROMPT
       .replace('{content}', content)
       .replace('{count}', String(count));
-    
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]) as Array<{ type: string; content: string }>;
-    }
-    
-    throw new Error('Failed to parse repurposed content');
+
+    return this.provider.generateContentJson<Array<{ type: string; content: string }>>(
+      prompt
+    );
   }
-  
+
   async expandIdea(idea: string): Promise<string> {
-    const genAI = getGenAI(this.apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
-    
     const prompt = `Expand this brain dump into multiple postable ideas:\n\n${idea}\n\nReturn as JSON array of expanded ideas:`;
-    
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+    return this.provider.generateContent(prompt);
   }
 }
 
-export interface VoiceProfileInput {
-  commonWords: string[];
-  sentenceStarts: string[];
-  toneKeywords: string[];
-  ctaPatterns: string[];
-  formalityScore: number;
-  avgPostLength: number;
+// Helper to get env var fallback keys per provider
+export function getEnvApiKey(provider: AIProviderType): string | undefined {
+  switch (provider) {
+    case 'openai':
+      return process.env.OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+    case 'anthropic':
+      return (
+        process.env.ANTHROPIC_API_KEY || process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY
+      );
+    case 'gemini':
+      return (
+        process.env.GEMINI_API_KEY ||
+        process.env.GOOGLE_API_KEY ||
+        process.env.NEXT_PUBLIC_GEMINI_API_KEY
+      );
+    case 'ollama':
+      return undefined; // Ollama doesn't need an API key
+    case 'minimax':
+      return process.env.MINIMAX_API_KEY || process.env.NEXT_PUBLIC_MINIMAX_API_KEY;
+    default:
+      return undefined;
+  }
+}
+
+// Helper to get provider from request/stored preference
+export function resolveProvider(
+  requestedProvider?: AIProviderType,
+  storedProvider?: AIProviderType,
+  apiKey?: string | null
+): { provider: AIProviderType; apiKey: string | null } {
+  const provider = requestedProvider || storedProvider || 'gemini';
+  const key = apiKey || getEnvApiKey(provider) || undefined;
+  return { provider, apiKey: key ?? null };
 }

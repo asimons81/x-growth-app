@@ -4,13 +4,65 @@ import { ensureUserExists, getRequestUserId } from '@/lib/server-user';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const type = searchParams.get('type'); // ideas, hooks, topics, drafts, schedule
+  const type = searchParams.get('type'); // ideas, hooks, topics, drafts, schedule, dashboard-stats
   const userId = await getRequestUserId(request);
   
   try {
     let data;
     
     switch (type) {
+      case 'dashboard-stats': {
+        // Get stats from daily_metrics for the user
+        const { data: metrics } = await supabase
+          .from('daily_metrics')
+          .select('*')
+          .eq('user_id', userId)
+          .order('date', { ascending: false })
+          .limit(30);
+
+        // Calculate totals from metrics
+        const totalImpressions = metrics?.reduce((sum, m) => sum + (m.impressions || 0), 0) || 0;
+        const totalEngagements = metrics?.reduce((sum, m) => sum + (m.engagements || 0), 0) || 0;
+        const totalFollowers = metrics?.[0]?.followers || 0;
+
+        // Get counts for other entities
+        const [{ count: draftsCount }, { count: scheduledCount }, { count: ideasCount }, { count: hooksCount }] = await Promise.all([
+          supabase.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'draft'),
+          supabase.from('schedule_queue').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'pending'),
+          supabase.from('ideas').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+          supabase.from('hooks').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+        ]);
+
+        // Check for voice profile and API keys
+        const { data: voiceProfile } = await supabase
+          .from('voice_profiles')
+          .select('id')
+          .eq('user_id', userId)
+          .single();
+
+        const { data: apiKeys } = await supabase
+          .from('user_api_keys')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .limit(1);
+
+        data = {
+          totalDrafts: draftsCount || 0,
+          scheduledPosts: scheduledCount || 0,
+          ideasCount: ideasCount || 0,
+          hooksCount: hooksCount || 0,
+          voiceProfileReady: !!voiceProfile,
+          apiKeyConfigured: !!(apiKeys && apiKeys.length > 0),
+          // Analytics from imported X data
+          totalImpressions,
+          totalEngagements,
+          currentFollowers: totalFollowers,
+          metricsDays: metrics?.length || 0,
+        };
+        break;
+      }
+
       case 'ideas': {
         const { data: ideas } = await supabase
           .from('ideas')
@@ -71,6 +123,71 @@ export async function GET(request: NextRequest) {
           .eq('source', 'imported')
           .order('posted_at', { ascending: false });
         data = posts;
+        break;
+      }
+
+      case 'posting-times': {
+        // Analyze best posting times from historical post engagement
+        const { data: posts } = await supabase
+          .from('posts')
+          .select('posted_at, impressions, likes, replies, retweets')
+          .eq('user_id', userId)
+          .not('posted_at', 'is', null)
+          .order('posted_at', { ascending: false })
+          .limit(500);
+
+        if (!posts || posts.length === 0) {
+          data = { slots: [], bestTime: null };
+          break;
+        }
+
+        // Group by day of week + hour
+        const slots: Record<string, { day: number; hour: number; totalEngagement: number; count: number; avgImpressions: number }> = {};
+
+        for (const post of posts) {
+          if (!post.posted_at) continue;
+          const date = new Date(post.posted_at);
+          const day = date.getDay();
+          const hour = date.getHours();
+          const key = `${day}-${hour}`;
+          const engagement = (post.likes || 0) + (post.replies || 0) + (post.retweets || 0);
+
+          if (!slots[key]) {
+            slots[key] = { day, hour, totalEngagement: 0, count: 0, avgImpressions: 0 };
+          }
+          slots[key].totalEngagement += engagement;
+          slots[key].avgImpressions += post.impressions || 0;
+          slots[key].count += 1;
+        }
+
+        // Calculate averages and score each slot
+        const scoredSlots = Object.values(slots).map(slot => ({
+          day: slot.day,
+          hour: slot.hour,
+          avgEngagement: slot.totalEngagement / slot.count,
+          avgImpressions: slot.avgImpressions / slot.count,
+          postCount: slot.count,
+          // Score: weighted combination of engagement and impressions, normalized
+          score: ((slot.totalEngagement / slot.count) * 0.7 + (slot.avgImpressions / slot.count) * 0.3) / 10,
+        }));
+
+        // Sort by score descending
+        scoredSlots.sort((a, b) => b.score - a.score);
+
+        // Get the best single time
+        const bestSlot = scoredSlots[0];
+
+        // Get day names
+        const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const bestTime = bestSlot
+          ? `${DAY_NAMES[bestSlot.day]} at ${bestSlot.hour}:00`
+          : null;
+
+        data = {
+          slots: scoredSlots.slice(0, 10), // Top 10 time slots
+          bestTime,
+          totalPostsAnalyzed: posts.length,
+        };
         break;
       }
 

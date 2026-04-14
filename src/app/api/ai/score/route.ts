@@ -1,35 +1,46 @@
 import { NextResponse } from 'next/server';
-import { AIService } from '@/lib/ai';
+import { AIService, resolveProvider } from '@/lib/ai';
+import { AIProviderType } from '@/lib/ai-providers';
+import { getEnvApiKey } from '@/lib/ai';
 import { getRequestUserId } from '@/lib/server-user';
-import { getUserApiKey } from '@/lib/server/user-keys';
+import { getUserApiKey, getUserPreferredProvider } from '@/lib/server/user-keys';
 
 export async function POST(request: Request) {
   try {
-    const { content, apiKey: requestApiKey } = await request.json();
+    const { content, provider: requestedProvider, apiKey: requestApiKey } =
+      await request.json();
     const userId = await getRequestUserId(request);
-    
+
     if (!content) {
       return NextResponse.json({ error: 'Content required' }, { status: 400 });
     }
 
-    const storedApiKey = await getUserApiKey(userId, 'google');
-    const envApiKey =
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_API_KEY ||
-      process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-    const apiKey = (storedApiKey as string | null) || requestApiKey || envApiKey;
-    
-    if (!apiKey) {
+    const storedProvider = await getUserPreferredProvider(userId);
+    const storedApiKey = storedProvider
+      ? await getUserApiKey(userId, storedProvider)
+      : null;
+    const envApiKey = storedProvider
+      ? getEnvApiKey(storedProvider as AIProviderType)
+      : getEnvApiKey('gemini');
+    const apiKey = requestApiKey || storedApiKey || envApiKey;
+
+    if (!apiKey && requestedProvider !== 'ollama') {
       return NextResponse.json(
-        { error: 'No Gemini API key. Add in Settings.' },
+        { error: `No API key. Add in Settings.` },
         { status: 400 }
       );
     }
-    
-    const ai = new AIService(apiKey);
+
+    const { provider } = resolveProvider(
+      requestedProvider as AIProviderType | undefined,
+      storedProvider as AIProviderType | undefined,
+      apiKey
+    );
+
+    const ai = new AIService(provider, { apiKey: apiKey || undefined });
     const score = await ai.scorePost(content);
-    
-    return NextResponse.json({ score });
+
+    return NextResponse.json({ score, provider });
   } catch (err) {
     console.error('Scoring error:', err);
     const errorMessage =

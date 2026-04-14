@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Filter } from 'lucide-react';
 
@@ -61,7 +61,7 @@ export default function ClustersPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [total, setTotal] = useState(0);
 
-  async function fetchClusters(status: string) {
+  const fetchClusters = useCallback(async (status: string) => {
     setLoading(true);
     const q = status === 'all' ? '' : `&status=${status}`;
     const res = await fetch(`/api/radar/clusters?limit=50${q}`);
@@ -69,9 +69,9 @@ export default function ClustersPage() {
     setClusters(data.data ?? []);
     setTotal(data.count ?? 0);
     setLoading(false);
-  }
+  }, []);
 
-  useEffect(() => { fetchClusters(statusFilter); }, [statusFilter]);
+  useEffect(() => { fetchClusters(statusFilter); }, [statusFilter, fetchClusters]);
 
   return (
     <div className="space-y-6">
