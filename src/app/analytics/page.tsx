@@ -294,7 +294,7 @@ export default function AnalyticsPage() {
       {/* Info banner */}
       <div className="mb-6 flex items-start gap-2 text-xs text-[#94a3b8] p-3 bg-[#0f0f1a] rounded-xl border border-[#1e1e35]">
         <Info size={13} className="text-indigo-400 shrink-0 mt-0.5" />
-        Import your X analytics CSV (from X Analytics dashboard) to visualize performance. Format: content, posted_at, impressions, likes, replies, retweets
+        Import a post-level X CSV (not the dashboard daily export). Required column: content (or text/tweet text/post text). Recommended columns: posted_at/date, impressions, likes, replies, retweets/reposts.
       </div>
 
       {loading ? (
@@ -311,7 +311,7 @@ export default function AnalyticsPage() {
         <EmptyState
           icon={<BarChart2 size={28} />}
           title="No analytics data yet"
-          description="Import your X analytics CSV to see charts, top posts, and engagement trends."
+          description="Import a post-level X CSV to see charts, top posts, and engagement trends."
           action={
             <label htmlFor="analytics-import" className="cursor-pointer">
               <div className="inline-flex items-center gap-2 px-5 py-2.5 text-sm rounded-xl font-medium btn-gradient cursor-pointer">
