@@ -16,6 +16,7 @@ import {
   BarChart2,
   Shuffle,
   TrendingUp,
+  Radar,
   ChevronRight,
   Circle,
   Moon,
@@ -29,16 +30,17 @@ const navItems = [
   { href: "/schedule", label: "Schedule", icon: Calendar, group: "main" },
   { href: "/calendar", label: "Calendar", icon: CalendarDays, group: "main" },
   { href: "/library", label: "Library", icon: BookOpen, group: "tools" },
+  { href: "/radar", label: "Radar", icon: Radar, group: "tools" },
   { href: "/analytics", label: "Analytics", icon: BarChart2, group: "tools" },
   { href: "/hooks", label: "Hook Generator", icon: Zap, group: "tools" },
   { href: "/repurpose", label: "Repurpose", icon: Shuffle, group: "tools" },
 ];
 
-// Bottom nav shows only the most important 5 for mobile
+// Bottom nav is capped at 5 items for mobile
 const bottomNavItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/compose", label: "Compose", icon: PenLine },
-  { href: "/ideas", label: "Ideas", icon: Lightbulb },
+  { href: "/radar", label: "Radar", icon: Radar },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
