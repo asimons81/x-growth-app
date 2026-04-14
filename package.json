@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "security:scan": "./scripts/security-scan.sh",
-    "preflight": "npm run security:scan && npm run lint && npm run build"
+    "preflight": "npm run security:scan && npm run lint && npm run build",
+    "test": "node --test --experimental-strip-types src/app/api/x-analytics/opencli.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.88.0",

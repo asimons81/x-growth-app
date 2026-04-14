@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import {
+  isChildProcessExecutionSupported,
+  runOpenCLICommand,
+  runPreflightChecks,
+} from './opencli';
 
 const TWITTER_HANDLE = 'tonysimons_';
-const COMMAND_TIMEOUT_MS = 15000;
 
 interface XAnalyticsData {
   profile: ProfileData | null;
@@ -60,20 +60,6 @@ interface TrendingData {
   category: string;
 }
 
-async function runOpenCLICommand(args: string[]): Promise<string> {
-  const cmd = ['opencli', ...args].join(' ');
-  const { stdout, stderr } = await execAsync(cmd, {
-    cwd: '/home/tony/x-growth-app',
-    timeout: COMMAND_TIMEOUT_MS,
-  });
-  
-  if (stderr && !stdout) {
-    throw new Error(stderr);
-  }
-  
-  return stdout;
-}
-
 function parseJsonOutput<T>(output: string): T | null {
   try {
     const lines = output.trim().split('\n');
@@ -91,9 +77,9 @@ function parseJsonOutput<T>(output: string): T | null {
   }
 }
 
-async function fetchProfile(): Promise<ProfileData | null> {
+async function fetchProfile(cwd: string): Promise<ProfileData | null> {
   try {
-    const output = await runOpenCLICommand(['twitter', 'profile', TWITTER_HANDLE, '--format', 'json']);
+    const output = await runOpenCLICommand(['twitter', 'profile', TWITTER_HANDLE, '--format', 'json'], cwd);
     const data = parseJsonOutput<ProfileData[]>(output);
     return data?.[0] ?? null;
   } catch (err) {
@@ -102,9 +88,9 @@ async function fetchProfile(): Promise<ProfileData | null> {
   }
 }
 
-async function fetchFollowers(): Promise<FollowerData[]> {
+async function fetchFollowers(cwd: string): Promise<FollowerData[]> {
   try {
-    const output = await runOpenCLICommand(['twitter', 'followers', TWITTER_HANDLE, '--format', 'json']);
+    const output = await runOpenCLICommand(['twitter', 'followers', TWITTER_HANDLE, '--format', 'json'], cwd);
     const data = parseJsonOutput<FollowerData[]>(output);
     return data ?? [];
   } catch (err) {
@@ -113,9 +99,9 @@ async function fetchFollowers(): Promise<FollowerData[]> {
   }
 }
 
-async function fetchFollowing(): Promise<FollowingData[]> {
+async function fetchFollowing(cwd: string): Promise<FollowingData[]> {
   try {
-    const output = await runOpenCLICommand(['twitter', 'following', TWITTER_HANDLE, '--format', 'json']);
+    const output = await runOpenCLICommand(['twitter', 'following', TWITTER_HANDLE, '--format', 'json'], cwd);
     const data = parseJsonOutput<FollowingData[]>(output);
     return data ?? [];
   } catch (err) {
@@ -124,9 +110,9 @@ async function fetchFollowing(): Promise<FollowingData[]> {
   }
 }
 
-async function fetchRecentLikes(): Promise<LikeData[]> {
+async function fetchRecentLikes(cwd: string): Promise<LikeData[]> {
   try {
-    const output = await runOpenCLICommand(['twitter', 'likes', TWITTER_HANDLE, '--format', 'json', '--limit', '20']);
+    const output = await runOpenCLICommand(['twitter', 'likes', TWITTER_HANDLE, '--format', 'json', '--limit', '20'], cwd);
     const data = parseJsonOutput<LikeData[]>(output);
     return data ?? [];
   } catch (err) {
@@ -135,9 +121,9 @@ async function fetchRecentLikes(): Promise<LikeData[]> {
   }
 }
 
-async function fetchTrending(): Promise<TrendingData[]> {
+async function fetchTrending(cwd: string): Promise<TrendingData[]> {
   try {
-    const output = await runOpenCLICommand(['twitter', 'trending', '--format', 'json', '--limit', '20']);
+    const output = await runOpenCLICommand(['twitter', 'trending', '--format', 'json', '--limit', '20'], cwd);
     const data = parseJsonOutput<TrendingData[]>(output);
     return data ?? [];
   } catch (err) {
@@ -147,13 +133,35 @@ async function fetchTrending(): Promise<TrendingData[]> {
 }
 
 export async function GET() {
+  if (!isChildProcessExecutionSupported()) {
+    return NextResponse.json({
+      available: false,
+      code: 'not_available',
+      message: 'X analytics is unavailable in this runtime because child-process execution is unsupported.',
+    }, { status: 503 });
+  }
+
+  let cwd: string;
+
+  try {
+    cwd = await runPreflightChecks();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'OpenCLI preflight checks failed.';
+
+    return NextResponse.json({
+      available: false,
+      code: 'not_available',
+      message,
+    }, { status: 503 });
+  }
+
   try {
     const [profile, followers, following, recentLikes, trending] = await Promise.all([
-      fetchProfile(),
-      fetchFollowers(),
-      fetchFollowing(),
-      fetchRecentLikes(),
-      fetchTrending(),
+      fetchProfile(cwd),
+      fetchFollowers(cwd),
+      fetchFollowing(cwd),
+      fetchRecentLikes(cwd),
+      fetchTrending(cwd),
     ]);
 
     const hasData = profile || followers.length > 0 || following.length > 0 || recentLikes.length > 0 || trending.length > 0;
