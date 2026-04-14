@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 import Papa from 'papaparse';
 import { supabase } from '@/lib/supabase';
 import { ensureUserExists, getRequestUserId } from '@/lib/server-user';
+import {
+  getCellValue,
+  getExpectedHeaders,
+  getNormalizedHeaderList,
+  normalizeRow,
+  validateAnalyticsCSV,
+  validatePostCSV,
+} from '@/lib/csv-validation';
 
 interface ImportReport {
   success: boolean;
@@ -10,6 +18,11 @@ interface ImportReport {
   skipped: number;
   errors: string[];
 }
+
+const SUPPORTED_FORMATS = [
+  'Post-level performance CSV (content/text + optional posted_at/date, impressions, likes, replies, retweets/reposts).',
+  'Daily analytics CSV (date/day + optional followers, impressions, engagements, posts_count/posts).',
+] as const;
 
 export async function POST(request: Request) {
   try {
@@ -44,12 +57,18 @@ export async function POST(request: Request) {
     }
 
     const rows = parsed.data;
-    const headers = Object.keys(rows[0] || {}).map((h) => h.toLowerCase().trim());
+    const normalizedRows = rows.map(normalizeRow);
+    const headers = getNormalizedHeaderList(Object.keys(rows[0] || {}));
     const validHeaders = type === 'posts' ? validatePostCSV(headers) : validateAnalyticsCSV(headers);
 
     if (!validHeaders) {
       return NextResponse.json(
-        { error: `Invalid ${type} CSV format`, headers },
+        {
+          error: `Invalid ${type} CSV format`,
+          headers,
+          expected_headers: getExpectedHeaders(type),
+          supported_formats: SUPPORTED_FORMATS,
+        },
         { status: 400 }
       );
     }
@@ -63,22 +82,21 @@ export async function POST(request: Request) {
     };
 
     if (type === 'posts') {
-      for (const [index, row] of rows.entries()) {
-        const content = String(row.content || row.text || '').trim();
+      for (const [index, row] of normalizedRows.entries()) {
+        const content = getCellValue(row, 'content').trim();
         if (!content) {
           report.skipped += 1;
           report.errors.push(`Row ${index + 2}: missing content`);
           continue;
         }
 
-        const postedAtRaw = String(row.posted_at || row.date || '').trim();
+        const postedAtRaw = getCellValue(row, 'posted_at').trim();
         const postedAt = postedAtRaw ? new Date(postedAtRaw).toISOString() : null;
-        const impressions = parseInt(String(row.impressions || '0'), 10) || 0;
-        const likes = parseInt(String(row.likes || '0'), 10) || 0;
-        const replies = parseInt(String(row.replies || '0'), 10) || 0;
-        const retweets = parseInt(String(row.retweets || row.reposts || '0'), 10) || 0;
+        const impressions = parseInt(getCellValue(row, 'impressions') || '0', 10) || 0;
+        const likes = parseInt(getCellValue(row, 'likes') || '0', 10) || 0;
+        const replies = parseInt(getCellValue(row, 'replies') || '0', 10) || 0;
+        const retweets = parseInt(getCellValue(row, 'retweets') || '0', 10) || 0;
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { error } = await supabase.from('posts').insert({
           user_id: userId,
           content,
@@ -102,8 +120,8 @@ export async function POST(request: Request) {
     }
 
     if (type === 'analytics') {
-      for (const [index, row] of rows.entries()) {
-        const dateRaw = String(row.date || '').trim();
+      for (const [index, row] of normalizedRows.entries()) {
+        const dateRaw = getCellValue(row, 'date').trim();
         if (!dateRaw) {
           report.skipped += 1;
           report.errors.push(`Row ${index + 2}: missing date`);
@@ -117,12 +135,11 @@ export async function POST(request: Request) {
           continue;
         }
 
-        const followers = parseInt(String(row.followers || '0'), 10) || 0;
-        const impressions = parseInt(String(row.impressions || '0'), 10) || 0;
-        const engagements = parseInt(String(row.engagements || '0'), 10) || 0;
-        const postsCount = parseInt(String(row.posts_count || row.posts || '0'), 10) || 0;
+        const followers = parseInt(getCellValue(row, 'followers') || '0', 10) || 0;
+        const impressions = parseInt(getCellValue(row, 'impressions') || '0', 10) || 0;
+        const engagements = parseInt(getCellValue(row, 'engagements') || '0', 10) || 0;
+        const postsCount = parseInt(getCellValue(row, 'posts_count') || '0', 10) || 0;
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { error } = await supabase.from('daily_metrics').insert({
           user_id: userId,
           date: date.toISOString(),
@@ -153,12 +170,4 @@ export async function POST(request: Request) {
   }
 }
 
-export function validatePostCSV(headers: string[]): boolean {
-  const required = ['content'];
-  return required.every((h) => headers.includes(h) || headers.includes('text'));
-}
-
-export function validateAnalyticsCSV(headers: string[]): boolean {
-  const required = ['date'];
-  return required.every((h) => headers.includes(h));
-}
+export { validatePostCSV, validateAnalyticsCSV };
